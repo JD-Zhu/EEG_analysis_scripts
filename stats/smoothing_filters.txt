@@ -1,0 +1,44 @@
+= Paper: Kawala-Sterniuk et al. (2020), published in Sensors = 
+
+Compared the following (see pg2 bottom):
+1. 'Basic Smooth': 	smooth(timecourse)		% basic smooth function (default window size: 5)
+2. 'Basic Smooth - 15': smooth(timecourse, 15) 		% basic smooth function, with window size 15
+3. 'Basic Smooth - SG': smooth(timecourse, 'sgolay');	% basic smooth function using 'sgolay' option, 
+							% i.e. same as sgolayfilt (order 2, framelen 5)
+4. 'Savitzky-Golay':	sgolayfilt(timecourse, 4, 27);	% sgolay filter (order 4, framelen 27)
+5. 'Median':		medfilt1(timecourse, 9)		% median filter (order 9; here, "order" means "window size")
+
+Results:
+> Looking at spectrograms, the best method is 'Median', followed closely by 'Savitzky-Golay'.
+> Looking at Power Spectral Density (PSD) diagrams, the method that preserves the shape the best is 'Median' filter. The other methods have 'dips' at certain frequencies (mostly affecting >40Hz, sgolayfilt being the worst).
+> Looking at the waveforms, the method that preserves it the best is 'Basic smooth - SG'. In my own testing below, you can see it really doesn't do much at all! Other than this method, which would be the best?
+
+
+
+= My testing on my single-subject ROI timecourses =
+
+1. 'Basic Smooth':
+Reduces peak amplitudes. Preserving almost all the peaks, with quite accurate timing.
+
+2. sgolayfilt-example (using the params from the first example on matlab website):
+	sgolayfilt(timecourse, 3, 11);	% https://www.mathworks.com/help/signal/ref/sgolayfilt.html
+In general, peak amplitude reduction is less than opt 1 (i.e. better preserved; but there are occasions where the opposite is true). Peak timing is almost as well-preserved as opt 1 (occasionally not as good). Also occasionally combines two peaks into one. 
+Explanation: for parts that are more polynomial-like, this opt prob conserves it better; if less polynomial-like, this opt might introduce more distortion (to make it more polynomial).
+
+3. 'Basic Smooth - SG': 
+Keeps quite close to the original waveform - doesn't do much at all!
+
+4. sgolayfilt-paper (using the params in the paper, for the 'Savitzky-Golay' method)
+A LOT smoother than all other methods tested so far. Sigly reduces spike ampitudes, constantly combining multiple peaks into one, and timing of peak is shifted.
+
+5. Median filter
+Window size below 3 doesn't do much. 
+Window size of 3 or above gives weird "horizontal stretches" <-- BUT the ones in the paper doesn't seem to have this issue ... what could have gone wrong?
+
+A: we should reduce the window size based on sampling rate. Their sampling rate was 512Hz, and used a window size of 9. Our sampling rate was 200Hz. Accordingly, (200/512)*9 = 3.5 , we should use a window size of 3 or 4.
+
+The alternative matlab fn:
+	smoothdata(timecourse, 'movmedian');
+can compute an appropriate window size automatically. This sometimes performs similar to (or better than) order 6, but at times can result in even larger "horizontal stretches" than order 9.
+
+In general, the 'median' methods preserves all the peaks, just make their amplitudes smaller. The larger the window size, the smaller the peak amplitudes. This is prob not useful as we want to combine adjacent peaks, in order to make the switch cost more obvious.
