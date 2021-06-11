@@ -16,11 +16,10 @@ function [selChLabel] = reject_bad_channels(alldata)
     %}            
     
     % plot each channel individually, for manual rejection
-    %TODO% This is absly not informative! (even flat channels show up
-    %normal... prob due to diff scaling?) SHould change to just entering
-    %a list of channels to reject!!
-    %Check - can we enter channel label (rather than index) into the step
-    %below? if so, that's our solution.
+    % Note - This is absly not informative! (even flat channels show up
+    %normal... prob due to diff scaling?)
+    % So, instead of using this, just enter the channels you want to reject
+    % in the visual summary (below)
     cfg                         = [];
     cfg.method                  = 'channel';
     %cfg.method                  = 'summary';

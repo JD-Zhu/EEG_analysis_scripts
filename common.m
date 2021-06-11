@@ -10,8 +10,8 @@ function [] = common()
     % specify all paths as absolute paths, to avoid any issues when we 'cd' into diff folders    
     global DataFolder; global ResultsFolder; global ResultsFolder_ROI; global ResultsFolder_Source;
     
-    DataFolder = 'Z:\Analysis\Preprocess\SpinalCordInjury_CBD\EEG\DATA\'; % this directory should contain all the SubjectFolders
-    ResultsFolder = 'Z:\Analysis\Preprocess\SpinalCordInjury_CBD\EEG\results_freq\'; % all subjects' freq analysis results will be stored here
+    DataFolder = 'Z:\Analysis\Preprocess\NeuRA_SCI_SCS_CIPN_BUMP\EEG\DATA\'; % this directory should contain all the SubjectFolders
+    ResultsFolder = 'Z:\Analysis\Preprocess\NeuRA_SCI_SCS_CIPN_BUMP\EEG\results_FREQ\'; % all subjects' freq analysis results will be stored here
     %DataFolder = [pwd '\\..\\DATA\']; % this directory should contain all the SubjectFolders
     %ResultsFolder = [pwd '\\..\\results_FREQ\\']; % all subjects' ERF results will be stored here
     %ResultsFolder_ROI = [pwd '\\..\\results_ROI\\']; % all subjects' ROI source-reconstruction results will be stored here
