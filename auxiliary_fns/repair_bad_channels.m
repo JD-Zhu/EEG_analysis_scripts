@@ -39,27 +39,6 @@ function data = repair_bad_channels(data, neighbours, all_labels)
     badchanindx = find(goodchans==0); % the rest are bad channels
     badChannels = all_labels(badchanindx); % get the channel names
 
-
-    % read the channel locations
-    % https://www.fieldtriptoolbox.org/faq/how_are_electrodes_magnetometers_or_gradiometers_described/
-    %chanpos = readtable('chanlocs_XYZ_61_nolabel.txt');
-    %elec.chanpos = chanpos;
-    %elec.label = all_labels;
-    %elec.unit = 'mm';
-    load('elec.mat'); % just load the version we have already made
-   
-    % sanity check - plot the layout created from this elec file
-    %{
-    cfg = [];
-    cfg.elec = elec;
-    layout = ft_prepare_layout(cfg);
-    figure; ft_plot_layout(layout);
-    %}
-    
-    % add "elec" field to the data struct (needed for channel repair)
-    %elec = ft_read_sens(rawfile, 'senstype','eeg', 'fileformat','easycap_txt');
-    data.elec  = elec;
-    
     cfg = [];
     cfg.method         = 'spline'; % use spline method for missing channels that lie next to each other
     cfg.badchannel     = badChannels;

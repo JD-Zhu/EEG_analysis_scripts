@@ -65,20 +65,11 @@ S1_output_filename = 'S1_preprocessed_data.mat'; % Stage 1 output (stored inside
 S3_output_filename = ['.mat']; % Final output (stored in ResultsFolder for all subjects)
 
 % load layout & neighbours
-load('easycapM11.mat'); % this contains a variable called "lay"
+%load('easycapM11.mat'); % easycap doesn't have PO5 & PO6
+load('lay.mat'); % use our custom-made layout & neighbours
 load('neighbours.mat');
 load('all_labels.mat'); % list of 61 real channels (i.e. excluding M1 M2 EOG)
-
-% the layout above is based on easycap (should be the same as ANT Neuro), 
-% alternatively we can create our own layout from scratch (based on electrode positions)
-%{
-load('elec.mat');
-cfg = [];
-cfg.elec = elec;
-lay = ft_prepare_layout(cfg);
-%}
-
-%ft_plot_layout(lay);
+%figure; ft_plot_layout(lay);
         
 
 %% Stage 1: preprocessing
@@ -247,6 +238,11 @@ for i = 1:length(SubjectIDs)
         % This also avoids having too few channels in the GA (only 
         % those channels present in all subjects will be kept in the GA)
         if (CHANNEL_REPAIR)
+            % add "elec" field to the data struct (needed for channel repair)
+            %elec = ft_read_sens(rawfile, 'senstype','eeg', 'fileformat','easycap_txt');
+            load('elec.mat'); % just load the version we have already made
+            alldata.elec = elec;
+            
             alldata = repair_bad_channels(alldata, neighbours, all_labels);
         end
 

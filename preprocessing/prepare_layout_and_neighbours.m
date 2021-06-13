@@ -1,5 +1,25 @@
-% prepare neighbours - only need to do this once & save for later
+% only need to do this once & save for later
 
+
+%% prepare layout
+
+% read the sensor positions
+% https://www.fieldtriptoolbox.org/faq/how_are_electrodes_magnetometers_or_gradiometers_described/
+%chanpos = readtable('chanlocs_XYZ_61_nolabel.txt');
+%elec.chanpos = chanpos;
+%elec.label = all_labels;
+%elec.unit = 'mm';
+load('elec.mat'); % just load the version we have already made, this contains 62 channels (with ref sensor CPz added back)
+
+cfg = [];
+cfg.elec = elec;
+lay = ft_prepare_layout(cfg);
+figure; ft_plot_layout(lay);
+
+save lay lay
+
+
+%% prepare neighbours
 %{
 Default distance is 4.
 For MQ system:
@@ -18,4 +38,4 @@ cfg.feedback = 'yes'; % this will produce a plot showing the neighbour relations
 % http://www.fieldtriptoolbox.org/faq/how_can_i_define_neighbouring_sensors/
 
 neighbours = ft_prepare_neighbours(cfg); 
-save('neighbours.mat', 'neighbours');
+save neighbours neighbours
