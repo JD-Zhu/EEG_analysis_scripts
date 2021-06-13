@@ -8,24 +8,19 @@
 %clear all % disable this line if u want breakpoints to work
 
 % run the #define section
-global DataFolder; global ResultsFolder; global EEG_chans;
-%global eventcodes; global eventnames; global eventnames_real; global collapse_across_langs;
-global colours;
+global DataFolder; global ResultsFolder; 
+% global EEG_chans; global colours;
 common();
 
 
-% enable access to 'SubjectID' from inside "trig_fun_160_...", so that 
-% correct code_delay value can be set for each subject (30ms for first 5 subjects, 100ms for the others)
-%global SubjectID; 
-
 % find all subject folders containing raw EEG recording
-SubjectIDs = dir([DataFolder '9004*']);
+SubjectIDs = dir([DataFolder '*_S1']);
 %SubjectIDs = [dir([DataFolder 'A*']); dir([DataFolder 'B*'])];
 %SubjectIDs = SubjectIDs([2 3 6]); % only process selected subjects
 %SubjectIDs([2 13 25]) = []; % remove certain subjects from the list
 
 SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
-%SubjectIDs = {'B02-YS-3628'}; % or manually specify which subjects to process
+SubjectIDs = {'9005_S1'}; % or manually specify which subjects to process
 
 
 % === Settings ===
@@ -75,7 +70,7 @@ load('neighbours.mat');
 load('all_labels.mat'); % list of 61 real channels (i.e. excluding M1 M2 EOG)
 
 % the layout above is based on easycap (should be the same as ANT Neuro), 
-% alternatively we can create our own from scratch (based on electrode positions)
+% alternatively we can create our own layout from scratch (based on electrode positions)
 %{
 load('elec.mat');
 cfg = [];
@@ -444,72 +439,3 @@ for i = 1:length(SubjectIDs)
         load(S3_output_file);
     end
 end
-
-
-%% Stage 4: Average across subjects
-
-run_name = 'offlineHPF';
-
-% Plot grand ave
-temp = load([ResultsFolder_thisrun '552_S1_offline0.01HPF_noICA_carefulReject.mat']);
-freq1 = temp.freq;
-temp = load([ResultsFolder_thisrun '9009-test_offlineHPF_noICA_carefulReject.mat']);
-freq2 = temp.freq;
-temp = load([ResultsFolder_thisrun '9002_S1_EC.mat']);
-freq3 = temp.freq;
-
-% find the channels that all subjects have
-%common_chans = intersect(freq1.label, freq2.label);
-%common_chans = intersect(common_chans, freq3.label);
-
-cfg = [];
-%cfg.foilim = [0 30];
-%cfg.channel = common_chans;
-%cfg.nanmean = 'yes'; % this is no use - it will only GA the common channels,
-% coz we didn't keep the rejected chans as 'nan' (which causes problems in ft_freqanalysis)
-[grandavg] = ft_freqgrandaverage(cfg, freq1, freq2, freq3);
-    
-% where to save the figures
-save_location = [ResultsFolder_thisrun 'Figures_GA\\' run_name '\\'];
-mkdir(save_location);
-
-% plot power spectrum for all channels (overlay)
-figure; hold on;
-for chan = 1:length(grandavg.label)
-    plot(grandavg.freq, grandavg.powspctrm(chan,:))
-end
-xlim([1 30]);
-xlabel('Frequency (Hz)');
-ylabel('Absolute power (uV^2)');
-hold off;
-
-export_fig(gcf, [save_location 'powspctrm_allchans.png']); % use this tool to save the figure exactly as shown on screen
-
-% plot avg of all channels (log transformed)
-figure; plot(grandavg.freq, mean(log(grandavg.powspctrm)));
-xlim([0.01 30]);
-xlabel('Frequency (Hz)');
-ylabel('Power (log[uV^2]');
-
-export_fig(gcf, [save_location 'powspctrm_avg.png']); % use this tool to save the figure exactly as shown on screen
-        
-% plot topography for each freq band
-plot_TFR_topo(grandavg, lay, 'infraslow', [0.03 0.06], save_location)
-plot_TFR_topo(grandavg, lay, 'theta', [4 8], save_location)
-plot_TFR_topo(grandavg, lay, 'alpha', [9 12], save_location)
-plot_TFR_topo(grandavg, lay, 'beta', [13 25], save_location)
-
-% freq3 doesn't contain infraslow (used online filter 0.3Hz), so redo here
-[grandavg] = ft_freqgrandaverage([], freq1, freq2);
-plot_TFR_topo(grandavg, lay, 'infraslow', [0.03 0.06], save_location)
-
-
-
-        
-%TODO% next step is stats - see Flavia paper, no need to do clusters
-        
-
-
-% If you want to find spatial cluster (following FT tutorial), 
-% need to check & make sure the channel layout is correct, 
-% otherwise the neighbours will be incorrect
