@@ -68,9 +68,9 @@ S3_output_filename = ['.mat']; % Final output (stored in ResultsFolder for all s
 
 % load layout & neighbours
 %load('easycapM11.mat'); % easycap doesn't have PO5 & PO6
-load('lay.mat'); % use our custom-made layout & neighbours (for ANT Neuro waveguard 64-channel)
-load('neighbours.mat');
-load('all_labels.mat'); % list of 61 real channels (i.e. excluding M1 M2 EOG)
+load('lay_AntNeuro64.mat'); % use our custom-made layout & neighbours
+load('neighbours_AntNeuro64.mat');
+load('all_labels_AntNeuro64.mat'); % list of 61 real channels (i.e. excluding M1 M2 EOG)
 %figure; ft_plot_layout(lay);
         
 
