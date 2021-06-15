@@ -1,4 +1,4 @@
-% EEG frequency analysis (ANT Neuro)
+% EEG frequency analysis
 %
 % Author: Judy Zhu (github.com/JD-Zhu)
 %
@@ -20,7 +20,7 @@ SubjectIDs = dir([DataFolder '*_S1']);
 %SubjectIDs([2 13 25]) = []; % remove certain subjects from the list
 
 SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
-SubjectIDs = {'9005_S1'}; % or manually specify which subjects to process
+SubjectIDs = {'9007_S1'}; % or manually specify which subjects to process
 
 
 % === Settings ===
@@ -57,6 +57,7 @@ RUN_UP_TO_ICA_REJECTION = false;             % perform 2nd manual step (select I
 CHANNEL_REPAIR = true; % repair bad/rejected channels? set to true for EEG data, as channel rejection leads to unbalanced offline reref
 %CALC_UNCLEANED_ERF = false; % calculate uncleaned erf? (for quality check of response-component rejection)
 
+
 % =================
 
 % set filenames for saving the output from each stage (so that we don't have to rerun the whole thing from beginning every time)
@@ -64,13 +65,15 @@ S1_output_filename = 'S1_preprocessed_data.mat'; % Stage 1 output (stored inside
 %S2_output_filename = 'S2_after_visual_rejection.mat'; % Stage 2 output (stored inside each Subject folder)
 S3_output_filename = ['.mat']; % Final output (stored in ResultsFolder for all subjects)
 
+
 % load layout & neighbours
 %load('easycapM11.mat'); % easycap doesn't have PO5 & PO6
-load('lay.mat'); % use our custom-made layout & neighbours
+load('lay.mat'); % use our custom-made layout & neighbours (for ANT Neuro waveguard 64-channel)
 load('neighbours.mat');
 load('all_labels.mat'); % list of 61 real channels (i.e. excluding M1 M2 EOG)
 %figure; ft_plot_layout(lay);
         
+
 
 %% Stage 1: preprocessing
 
@@ -335,6 +338,7 @@ for k = 1:length(SubjectIDs)
     end
 end
 %}
+
 
 %% Stage 3: freq analysis
 
