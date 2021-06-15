@@ -16,7 +16,7 @@ function [comp] = ICA_run(filter_first, varargin)
         fprintf(['\nWill run ICA on 1Hz-filtered data\n']); 
         
         rawfile    = varargin{1};
-        artf       = varargin{2};
+        arft       = varargin{2};
         selChLabel = varargin{3};
         
         hdr = ft_read_header(rawfile, 'dataformat','yokogawa_con'); % read header file
@@ -28,8 +28,8 @@ function [comp] = ICA_run(filter_first, varargin)
         cfg.continuous              = 'yes';
         cfg.hpfilter                = 'yes';
         cfg.hpfilttype              = 'firws';
-        cfg.hpfreq                  = 1;
-        cfg.hpfiltdf                = 1.5;
+        cfg.hpfreq                  = 0.1; % changed to 0.1Hz coz 1Hz actually removed most eye artefacts PRIOR TO ICA (0.5Hz removed quite a lot too)
+        cfg.hpfiltdf                = 0.2; % if ICA quality is not good (ie. too many slow drift components), try 0.2-0.3Hz!
         cfg.hpfiltwintype           = 'blackman';
         cfg.hpfiltdir               = 'onepass-zerophase';
         %cfg.dftfreq                 = 50; % removal line noise
@@ -60,7 +60,7 @@ function [comp] = ICA_run(filter_first, varargin)
         data4ICA = ft_preprocessing(cfg, data4ICA);
         
 
-        % reject the artifacts and channels in data4ICA that have been marked in Steps 3 & 4 
+        % reject the artifacts and channels that were marked in Steps 3 & 4 
         arft.artfctdef.reject       = 'partial';
         data4ICA                    = ft_rejectartifact(arft, data4ICA);
 

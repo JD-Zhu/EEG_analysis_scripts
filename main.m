@@ -243,7 +243,7 @@ for i = 1:length(SubjectIDs)
         if (CHANNEL_REPAIR)
             % add "elec" field to the data struct (needed for channel repair)
             %elec = ft_read_sens(rawfile, 'senstype','eeg', 'fileformat','easycap_txt');
-            load('elec.mat'); % just load the version we have already made
+            load('elec_AntNeuro64.mat'); % just load the version we have already made
             alldata.elec = elec;
             
             alldata = repair_bad_channels(alldata, neighbours, all_labels);
