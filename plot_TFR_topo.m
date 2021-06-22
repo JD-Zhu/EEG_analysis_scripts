@@ -1,11 +1,11 @@
 % Plots the topography of each frequency band &
-% saves the figures into the indi subject folder
+% saves the figures into the specified location
 %
-% @freq             output struct from ft_freqanalysis
+% @freq             output struct from ft_freqanalysis or ft_freqgrandaverage
 % @lay              channel layout
 % @freq_band        string, e.g. 'theta'
 % @freq_range       e.g. [4 8]
-% @save_location    where to save the figures (optional). 
+% @save_location    where to save the figures (optional).
 %                   if you don't want to save, just specify as ''
 %
 % Author: Judy Zhu (github.com/JD-Zhu)

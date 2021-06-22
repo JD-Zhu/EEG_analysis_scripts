@@ -20,7 +20,7 @@ SubjectIDs = dir([DataFolder '*_S1']);
 %SubjectIDs([2 13 25]) = []; % remove certain subjects from the list
 
 SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
-SubjectIDs = {'9008_S1'}; % or manually specify which subjects to process
+SubjectIDs = {'552_S1'}; % or manually specify which subjects to process
 
 
 % === Settings ===
@@ -384,55 +384,14 @@ for i = 1:length(SubjectIDs)
                      % (the longer the segments, the more reso we can have here)
         freq         = ft_freqanalysis(cfg, all_blocks);
 
-        % unsquaring (i.e. back to uV unit)
-        %bu = freq.powspctrm;
-        %freq.powspctrm = sqrt(freq.powspctrm);
         
-        % plot power spectrum of a particular channel
-        %{
-        figure;
-        plot(freq.freq, freq.powspctrm(12,:))
-        xlabel('Frequency (Hz)');
-        ylabel('absolute power (uV^2)');
-        xlim([1 30]);
-        %}
-
         % where to save the figures
         save_location = [SubjectFolder 'Figures\\' run_name '\\'];
         mkdir(save_location);
         
-        % plot power spectrum for all channels (overlay)
-        figure; hold on;
-        for chan = 1:length(freq.label)
-            plot(freq.freq, freq.powspctrm(chan,:))
-        end
-        xlim([1 30]);
-        xlabel('Frequency (Hz)');
-        ylabel('Absolute power (uV^2)');
-        hold off;
-        
-        export_fig(gcf, [save_location 'powspctrm_allchans.png']); % use this tool to save the figure exactly as shown on screen
-
-        % plot avg of all channels (log transformed)
-        figure; plot(freq.freq, mean(log(freq.powspctrm)));
-        xlim([0.01 30]);
-        xlabel('Frequency (Hz)');
-        ylabel('Power (log[uV^2]');
-        
-        export_fig(gcf, [save_location 'powspctrm_avg.png']); % use this tool to save the figure exactly as shown on screen
-        
-        %{
-        figure; 
-        cfg = [];
-        cfg.layout = lay;
-        ft_multiplotER(cfg, freq);
-        %}
-
-        % topoplot for each freq band
-        plot_TFR_topo(freq, lay, 'infraslow', [0.03 0.06], save_location)
-        plot_TFR_topo(freq, lay, 'theta', [4 8], save_location)
-        plot_TFR_topo(freq, lay, 'alpha', [9 12], save_location)
-        plot_TFR_topo(freq, lay, 'beta', [13 25], save_location)
+        % this fn takes care of all the plotting 
+        % (power spectrum & topo for each freq band)
+        plot_TFR(freq, lay, save_location);
         
         
         % SAVE all relevant variables from the workspace
