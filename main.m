@@ -20,7 +20,7 @@ SubjectIDs = dir([DataFolder '*_S1']);
 %SubjectIDs([2 13 25]) = []; % remove certain subjects from the list
 
 SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
-SubjectIDs = {'9007_S1'}; % or manually specify which subjects to process
+SubjectIDs = {'9008_S1'}; % or manually specify which subjects to process
 
 
 % === Settings ===
@@ -43,7 +43,9 @@ DO_ICA = true; % if we tested human subjects (i.e. not "dry run"), set this to t
 RUN_ICA_ON_1HZ_FILTERED_DATA = true; % for MEG (a lot more channels), we prob don't need to apply 1Hz HPF before running ICA
                                      % for EEG, this step is recommended, otherwise ICA will just detect all the slow drifts & nothing useful
                                      % (https://www.youtube.com/watch?v=2hrYEYSycGI    https://jinjeon.me/post/eeg-advanced/)
-                                     % I tried it - ICA decomposition was indeed poor quality if we don't apply 1Hz HPF first
+                                     % I tried it - ICA decomposition was indeed poor quality if we don't apply HPF first 
+                                     % (doesn't have to be 1Hz though, which actually removes most of the eye artefact; 
+                                     % 0.1Hz seems to work well)
 DO_BEH_CHECK = false; % if subjects produced beh responses, set this to true
 DO_PCA = false; % if subjects produced vocal responses, set this to true
 
@@ -51,7 +53,7 @@ DO_PCA = false; % if subjects produced vocal responses, set this to true
 RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = false;   % auto processing before 1st manual step
 RUN_UP_TO_AFTER_MANUAL_ARTEFACT = false;    % perform 1st manual step (mark artefact)
 RUN_UP_TO_ICA = false;                      % auto processing before 2nd manual step (ICA component analysis)
-RUN_UP_TO_ICA_REJECTION = false;             % perform 2nd manual step (select ICA comps to reject)
+RUN_UP_TO_ICA_REJECTION = false;            % perform 2nd manual step (select ICA comps to reject)
 
 % > other options:
 CHANNEL_REPAIR = true; % repair bad/rejected channels? set to true for EEG data, as channel rejection leads to unbalanced offline reref

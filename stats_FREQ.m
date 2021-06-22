@@ -8,12 +8,20 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+global ResultsFolder; 
+common();
+
 
 % Please specify correctly:
 run_name = 'offlineHPF';
 
+ResultsFolder_thisrun = [ResultsFolder run_name '\\']; % results for all subjects
+
 
 %% Plot grand ave across subjects
+
+dir([ResultsFolder_thisrun '*.mat']);
+
 temp = load([ResultsFolder_thisrun '552_S1_offline0.01HPF_noICA_carefulReject.mat']);
 freq1 = temp.freq;
 temp = load([ResultsFolder_thisrun '9009-test_offlineHPF_noICA_carefulReject.mat']);
