@@ -20,7 +20,7 @@ SubjectIDs = dir([DataFolder '*_S1']);
 %SubjectIDs([2 13 25]) = []; % remove certain subjects from the list
 
 SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
-SubjectIDs = {'552_S1'}; % or manually specify which subjects to process
+SubjectIDs = {'9008_S1'}; % or manually specify which subjects to process
 
 
 % === Settings ===
@@ -129,6 +129,12 @@ for i = 1:length(SubjectIDs)
 
         % >>>
         % Step 2: detrend - no longer used
+        
+        % If running in batch, skip to next subject now
+        if (RUN_UP_TO_BEFORE_MANUAL_ARTEFACT)
+            continue;
+        end
+        
         
         % >>>
         % Step 3: manually mark artefact sections
@@ -369,9 +375,9 @@ for i = 1:length(SubjectIDs)
         %{
         % There are diff options for cutting (length, overlap, tapers):
         % https://www.fieldtriptoolbox.org/workshop/madrid2019/tutorial_freq/
-        cfg = [];
-        cfg.length  = 4;
-        cfg.overlap = 0;
+        cfg1 = [];
+        cfg1.length  = 4;
+        cfg1.overlap = 0;
         all_blocks_segmented = ft_redefinetrial(cfg, all_blocks);
         %}
 
@@ -380,8 +386,8 @@ for i = 1:length(SubjectIDs)
         cfg.channel = 'all';
         cfg.method  = 'mtmfft';
         cfg.taper   = 'boxcar';
-        cfg.foi     = 0:0.005:30; % 1 / cfg1.length = 0.25  
-                     % (the longer the segments, the more reso we can have here)
+        cfg.foi     = 0:0.005:30; % 1 / cfg1.length = 0.25 (the longer the segments, the more reso we can have here)
+                                  % so for a reso of 0.005Hz, we need at least 1 segment with a length of 1 / 0.005 = 200 seconds
         freq         = ft_freqanalysis(cfg, all_blocks);
 
         

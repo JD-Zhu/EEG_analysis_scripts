@@ -63,7 +63,7 @@ cfg = [];
 GA_freq = ft_freqgrandaverage(cfg, allSubjects_freq{:});
 
 % save the GA
-GA_output_file = [ResultsFolder_thisrun 'GA_avg.mat'];
+GA_output_file = [save_location 'GA_avg.mat'];
 if (exist(GA_output_file, 'file') ~= 2) 
     save(GA_output_file, 'GA_freq');
 end
