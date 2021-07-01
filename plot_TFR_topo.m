@@ -15,7 +15,7 @@ function plot_TFR_topo(freq, lay, freq_band, freq_range, save_location)
     cfg = [];
     cfg.xlim         = freq_range; % freq range to plot (NOTE this is diff from FT documentation, as we only have 2 dimensions in "freq", ie. not TFR)
     cfg.marker       = 'on';
-    cfg.style        = 'both'; %'straight';
+    cfg.style        = 'straight'; % 'both';
     cfg.colorbar     = 'yes';
     cfg.layout       = lay;
     figure; title(freq_band);

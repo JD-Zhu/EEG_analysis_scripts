@@ -20,16 +20,23 @@ SubjectIDs = dir([DataFolder '*_S1']);
 %SubjectIDs([2 13 25]) = []; % remove certain subjects from the list
 
 SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
-SubjectIDs = {'9008_S1'}; % or manually specify which subjects to process
+%SubjectIDs = {'9008_S1'}; % or manually specify which subjects to process
 
 
 % === Settings ===
 
 % Please adjust as required:
 
+% offline rereferencing using "average reference" or "linked mastoid"?
+REREF = 'LM'; % 'AR'; 
+
 % > create a name for this run (this will create a separate output & Figures folder)
 %run_name = 'noICA';
 run_name = 'offlineHPF';
+
+if strcmp(REREF, 'LM')
+   run_name = [run_name '_LMref']; 
+end
 output_name = ['output\\' run_name '\\']; % location to save intermediate output files inside each SubjectFolder
 ResultsFolder_thisrun = [ResultsFolder run_name '\\']; % results for all subjects
 mkdir(ResultsFolder_thisrun);
@@ -159,7 +166,15 @@ for i = 1:length(SubjectIDs)
                                       % remove any trials containing NaNs
                                       % before computing ERF.
         alldata = ft_rejectartifact(arft, alldata);
-
+        
+        
+        % if using linked mastoid ref, keep a copy of M1 & M2 here
+        if strcmp(REREF, 'LM')
+            cfg = [];
+            cfg.channel = {'M1', 'M2'};
+            M1M2_data = ft_selectdata(cfg, alldata);
+        end
+        
         
         % >>>
         % Step 4: manually mark bad channels & reject them
@@ -257,15 +272,28 @@ for i = 1:length(SubjectIDs)
             alldata = repair_bad_channels(alldata, neighbours, all_labels);
         end
 
-        % re-reference using avg of all channels
         % https://www.fieldtriptoolbox.org/example/rereference/
         % https://www.fieldtriptoolbox.org/workshop/madrid2019/tutorial_cleaning/
-        cfg = [];
-        cfg.reref      = 'yes';
-        cfg.implicitref = 'CPz'; % add the online ref channel back into the data
-        cfg.refchannel = 'all'; % which channels to use for offline reref
-        cfg.refmethod  = 'avg';
-        alldata = ft_preprocessing(cfg, alldata);
+        
+        if strcmp(REREF, 'AR')
+            % re-reference using avg of all channels
+            cfg = [];
+            cfg.reref      = 'yes';
+            cfg.implicitref = 'CPz'; % add the online ref channel back into the data
+            cfg.refchannel = 'all'; % which channels to use for offline reref
+            cfg.refmethod  = 'avg';
+            alldata = ft_preprocessing(cfg, alldata);
+        elseif strcmp(REREF, 'LM')       
+            % re-reference using linked mastoid (i.e. avg of M1 & M2)  
+            alldata = ft_appenddata([], alldata, M1M2_data); % add M1 & M2 back in first
+            
+            cfg = [];
+            cfg.reref      = 'yes';
+            cfg.implicitref = 'CPz'; % add the online ref channel back into the data
+            cfg.refchannel = {'M1', 'M2'}; % which channels to use for offline reref
+            cfg.refmethod  = 'avg';
+            alldata = ft_preprocessing(cfg, alldata);
+        end
         
         
         % >>>

@@ -12,8 +12,7 @@
 % = Settings =
 
 % Please specify correctly:
-run_name = 'offlineHPF';
-
+run_name = 'offlineHPF_LMref';
 
 
 %%
