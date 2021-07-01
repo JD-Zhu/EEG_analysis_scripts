@@ -72,6 +72,24 @@ end
 load('lay_AntNeuro64.mat');
 plot_TFR(GA_freq, lay, save_location);
 
+% For sanity check: detailed topoplots (at regular freq interval)
+%{
+save_location_detailed = [save_location 'detailed_topoplots\\'];
+mkdir(save_location_detailed);
+
+low_freqs = [0 0.1];
+for i = 1:10
+    plot_TFR_topo(GA_freq, lay, [mat2str(low_freqs(2)) 'Hz'], low_freqs, save_location_detailed);
+    low_freqs = low_freqs + 0.1;
+end
+high_freqs = [1 2];
+for i = 1:29
+    plot_TFR_topo(GA_freq, lay, [mat2str(high_freqs(2)) 'Hz'], high_freqs, save_location_detailed);
+    high_freqs = high_freqs + 1;
+end
+%}
+
+
 % freq3 doesn't contain infraslow (used online filter 0.3Hz), so redo here
 %{
 [GA_freq] = ft_freqgrandaverage([], freq1, freq2);
