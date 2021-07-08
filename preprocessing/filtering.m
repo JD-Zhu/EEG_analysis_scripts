@@ -1,4 +1,4 @@
-% do_HPF: if yes, apply 0.5Hz high-pass filter
+% do_HPF: if yes, apply 0.01Hz high-pass filter
 
 function [alldata] = preprocessing(rawfile, do_HPF)
     
