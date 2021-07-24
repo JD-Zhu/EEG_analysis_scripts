@@ -42,12 +42,12 @@ ResultsFolder_thisrun = [ResultsFolder run_name '\\']; % results for all subject
 mkdir(ResultsFolder_thisrun);
 
 % > name of confile in the SubjectFolder (can use wildcards)
-confile_name = '*.eeg';
+confile_name = '*.edf';
 
 % > which steps to run?
 DO_HPF = true;
 DO_ICA = true; % if we tested human subjects (i.e. not "dry run"), set this to true
-RUN_ICA_ON_1HZ_FILTERED_DATA = true; % for MEG (a lot more channels), we prob don't need to apply 1Hz HPF before running ICA
+RUN_ICA_ON_1HZ_FILTERED_DATA = false; % for MEG (a lot more channels), we prob don't need to apply 1Hz HPF before running ICA
                                      % for EEG, this step is recommended, otherwise ICA will just detect all the slow drifts & nothing useful
                                      % (https://www.youtube.com/watch?v=2hrYEYSycGI    https://jinjeon.me/post/eeg-advanced/)
                                      % I tried it - ICA decomposition was indeed poor quality if we don't apply HPF first 
@@ -75,6 +75,7 @@ S1_output_filename = 'S1_preprocessed_data.mat'; % Stage 1 output (stored inside
 S3_output_filename = ['.mat']; % Final output (stored in ResultsFolder for all subjects)
 
 
+%TODO% create lay & neighbours for the 32-channel EEG system
 % load layout & neighbours
 %load('easycapM11.mat'); % easycap doesn't have PO5 & PO6
 load('lay_AntNeuro64.mat'); % use our custom-made layout & neighbours
@@ -126,7 +127,7 @@ for i = 1:length(SubjectIDs)
         cfg                      = [];
         cfg.trialfun             = 'ft_trialfun_general';
         cfg.datafile             = rawfile;
-        cfg.headerfile           = [rawfile(1:end-3) 'vhdr'];
+        %cfg.headerfile           = [rawfile(1:end-3) 'vhdr'];
         cfg.trialdef.triallength = Inf;
         cfg.trialdef.ntrials     = 1; % read in all data as a single segment, coz filtering should be done on continuous data
         cfg = ft_definetrial(cfg);
@@ -144,7 +145,7 @@ for i = 1:length(SubjectIDs)
         
         % if haven't already processed this before, do it now & save a copy
         if (exist(output_file, 'file') ~= 2)   
-            [alldata] = filtering(alldata, DO_HPF, 0.01, 0.02, 35, 10); % HPF 0.01+-0.01Hz; LPF 35+-5Hz
+            [alldata] = filtering(alldata, DO_HPF, 1, 2, 50, 10); % HPF 1+-1Hz; LPF 50+-5Hz
             
             % save now, because the 0.01Hz HPF TAKES FOREVER to run!
             if (DO_HPF) % to save disk space, only save if we did HPF

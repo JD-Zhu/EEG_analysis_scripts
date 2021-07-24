@@ -1,9 +1,10 @@
-path = 'Z:\PRJ-Transient\MIGRAINES\EEG\Subject 676\Session 1\';
-filename = '20150716172032.edf';
+path = 'Z:\PRJ-Transient\MIGRAINES\EEG\controls\Subject_891\Session 1 (32 Channel)\';
+      %'Z:\GRP-Henderson\RawPOWMRI_MRIData01\SCITrigemMRIData\Subject_700\Session 1 (32 Channel)\EEG\';
+file = dir([path '*.edf']);
 
 % define trials
 cfg            = [];
-cfg.dataset    = [path filename];
+cfg.dataset    = [path file.name];
 cfg.continuous = 'yes';
 cfg.channel    = 'all';
 data           = ft_preprocessing(cfg);
@@ -13,5 +14,5 @@ cfg           = [];
 cfg.viewmode  = 'vertical';
 cfg.continous = 'yes';
 cfg.blocksize = 120; % display 2-min segments
-cfg.ylim      = [ -32   32 ];
+cfg.ylim      = [ -1600  1600 ];
 ft_databrowser(cfg, data);
