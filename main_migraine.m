@@ -14,7 +14,7 @@ common();
 
 
 % find all subject folders containing raw EEG recording
-SubjectIDs = dir([DataFolder '*_S1']);
+SubjectIDs = dir([DataFolder 'Subject*']);
 %SubjectIDs = [dir([DataFolder 'A*']); dir([DataFolder 'B*'])];
 %SubjectIDs = SubjectIDs([2 3 6]); % only process selected subjects
 %SubjectIDs([2 13 25]) = []; % remove certain subjects from the list
@@ -28,11 +28,11 @@ SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
 % Please adjust as required:
 
 % offline rereferencing using "average reference" or "linked mastoid"?
-REREF = 'LM'; % 'AR'; 
+REREF = 'AR'; % we don't have M1 M2 for these data, so just use avg ref
 
 % > create a name for this run (this will create a separate output & Figures folder)
-%run_name = 'noICA';
-run_name = 'offlineHPF';
+run_name = 'noICA';
+%run_name = 'offlineHPF';
 
 if strcmp(REREF, 'LM')
    run_name = [run_name '_LMref']; 
@@ -42,11 +42,11 @@ ResultsFolder_thisrun = [ResultsFolder run_name '\\']; % results for all subject
 mkdir(ResultsFolder_thisrun);
 
 % > name of confile in the SubjectFolder (can use wildcards)
-confile_name = '*.edf';
+confile_name = '*\*.edf';
 
 % > which steps to run?
 DO_HPF = true;
-DO_ICA = true; % if we tested human subjects (i.e. not "dry run"), set this to true
+DO_ICA = false; % if we tested human subjects (i.e. not "dry run"), set this to true
 RUN_ICA_ON_1HZ_FILTERED_DATA = false; % for MEG (a lot more channels), we prob don't need to apply 1Hz HPF before running ICA
                                      % for EEG, this step is recommended, otherwise ICA will just detect all the slow drifts & nothing useful
                                      % (https://www.youtube.com/watch?v=2hrYEYSycGI    https://jinjeon.me/post/eeg-advanced/)
@@ -75,19 +75,21 @@ S1_output_filename = 'S1_preprocessed_data.mat'; % Stage 1 output (stored inside
 S3_output_filename = ['.mat']; % Final output (stored in ResultsFolder for all subjects)
 
 
-%TODO% create lay & neighbours for the 32-channel EEG system
 % load layout & neighbours
 %load('easycapM11.mat'); % easycap doesn't have PO5 & PO6
 load('lay_AntNeuro64.mat'); % use our custom-made layout & neighbours
 load('neighbours_AntNeuro64.mat');
-load('all_labels_AntNeuro64.mat'); % list of 61 real channels (i.e. excluding M1 M2 EOG)
 %figure; ft_plot_layout(lay);
+
+%TODO% create lay & neighbours for the 32-channel EEG system
+
+load('all_labels_migraine_32.mat'); % list of real EEG channels (i.e. excluding EOG & ref channels)
         
 
 
 %% Stage 1: preprocessing
 
-for i = 1:length(SubjectIDs)
+for i = 40:42%1:length(SubjectIDs)
     
     SubjectID = cell2mat(SubjectIDs(i));
     SubjectFolder = [DataFolder SubjectID '\\'];
@@ -115,8 +117,8 @@ for i = 1:length(SubjectIDs)
         
         
         % get the eeg data file name 
-        files = dir([SubjectFolder confile_name]);
-        rawfile = [SubjectFolder files(1).name];
+        files = dir(fullfile(SubjectFolder, confile_name));
+        rawfile = fullfile(files(1).folder, files(1).name);
 
             
         % >>>
@@ -145,7 +147,7 @@ for i = 1:length(SubjectIDs)
         
         % if haven't already processed this before, do it now & save a copy
         if (exist(output_file, 'file') ~= 2)   
-            [alldata] = filtering(alldata, DO_HPF, 1, 2, 50, 10); % HPF 1+-1Hz; LPF 50+-5Hz
+            [alldata] = filtering(alldata, DO_HPF, 1, 2, 60, 20); % HPF 1+-1Hz; LPF 60+-10Hz
             
             % save now, because the 0.01Hz HPF TAKES FOREVER to run!
             if (DO_HPF) % to save disk space, only save if we did HPF
@@ -319,7 +321,7 @@ for i = 1:length(SubjectIDs)
         % Step 7: downsample the data for saving
         %all_blocks.time(1:end) = all_blocks.time(1); % this avoids numeric round off issues in the time axes upon resampling
         cfg            = [];
-        cfg.resamplefs = 200; % sampling freq was 1000Hz, best to use a divisor of it (200Hz is commonly used)
+        cfg.resamplefs = 250; % sampling freq was 500Hz, best to use a divisor of it (~200Hz is commonly used)
         cfg.detrend    = 'no';
         all_blocks     = ft_resampledata(cfg, alldata);
 
@@ -433,7 +435,7 @@ for i = 1:length(SubjectIDs)
         cfg.channel = 'all';
         cfg.method  = 'mtmfft';
         cfg.taper   = 'boxcar';
-        cfg.foi     = 0:0.005:30; % 1 / cfg1.length = 0.25 (the longer the segments, the more reso we can have here)
+        cfg.foi     = 1:1:50; % 1 / cfg1.length = 0.25 (the longer the segments, the more reso we can have here)
                                   % so for a reso of 0.005Hz, we need at least 1 segment with a length of 1 / 0.005 = 200 seconds
         freq         = ft_freqanalysis(cfg, all_blocks);
 

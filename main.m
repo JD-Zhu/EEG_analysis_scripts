@@ -114,8 +114,8 @@ for i = 1:length(SubjectIDs)
         
         
         % get the eeg data file name 
-        files = dir([SubjectFolder confile_name]);
-        rawfile = [SubjectFolder files(1).name];
+        files = dir(fullfile(SubjectFolder, confile_name));
+        rawfile = fullfile(files(1).folder, files(1).name);
 
             
         % >>>
