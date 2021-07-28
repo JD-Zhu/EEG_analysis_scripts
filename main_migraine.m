@@ -8,11 +8,14 @@
 %clear all % disable this line if u want breakpoints to work
 
 % run the #define section
-global DataFolder; global ResultsFolder; 
+%global DataFolder; global ResultsFolder; 
 % global EEG_chans; global colours;
 common();
 
-
+% Please specify:
+DataFolder = 'Z:\Analysis\Judy\EpisodicMigraine_EEG\data\migraineurs\'; % this directory should contain all the SubjectFolders
+ResultsFolder = 'Z:\Analysis\Judy\EpisodicMigraine_EEG\results\migraineurs\'; % all subjects' freq analysis results will be stored here
+    
 % find all subject folders containing raw EEG recording
 SubjectIDs = dir([DataFolder 'Subject*']);
 %SubjectIDs = [dir([DataFolder 'A*']); dir([DataFolder 'B*'])];
@@ -31,7 +34,7 @@ SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
 REREF = 'AR'; % we don't have M1 M2 for these data, so just use avg ref
 
 % > create a name for this run (this will create a separate output & Figures folder)
-run_name = 'noICA';
+run_name = ''; %'withICA';
 %run_name = 'offlineHPF';
 
 if strcmp(REREF, 'LM')
@@ -57,7 +60,7 @@ DO_BEH_CHECK = false; % if subjects produced beh responses, set this to true
 DO_PCA = false; % if subjects produced vocal responses, set this to true
 
 % when running many subjects in one batch, process all auto steps until the first manual step
-RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = false;   % auto processing before 1st manual step
+RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = true;   % auto processing before 1st manual step
 RUN_UP_TO_AFTER_MANUAL_ARTEFACT = false;    % perform 1st manual step (mark artefact)
 RUN_UP_TO_ICA = false;                      % auto processing before 2nd manual step (ICA component analysis)
 RUN_UP_TO_ICA_REJECTION = false;            % perform 2nd manual step (select ICA comps to reject)
@@ -89,7 +92,7 @@ load('all_labels_migraine_32.mat'); % list of real EEG channels (i.e. excluding 
 
 %% Stage 1: preprocessing
 
-for i = 40:42%1:length(SubjectIDs)
+for i = 1:length(SubjectIDs)
     
     SubjectID = cell2mat(SubjectIDs(i));
     SubjectFolder = [DataFolder SubjectID '\\'];

@@ -8,10 +8,13 @@
 %clear all % disable this line if u want breakpoints to work
 
 % run the #define section
-global DataFolder; global ResultsFolder; 
+%global DataFolder; global ResultsFolder; 
 % global EEG_chans; global colours;
 common();
 
+% Please specify:
+DataFolder = 'Z:\Analysis\Preprocess\NeuRA_SCI_SCS_CIPN_BUMP\EEG\DATA\'; % this directory should contain all the SubjectFolders
+ResultsFolder = 'Z:\Analysis\Preprocess\NeuRA_SCI_SCS_CIPN_BUMP\EEG\results_FREQ\'; % all subjects' freq analysis results will be stored here
 
 % find all subject folders containing raw EEG recording
 SubjectIDs = dir([DataFolder '*_S1']);

@@ -8,7 +8,7 @@ function [arft] = mark_artefact(alldata)
     cfg.continous = 'yes';
 
     cfg.blocksize = 120; % display 2-min segments
-    cfg.ylim      = [ -32   32 ];
+    cfg.ylim      = [ -256   256 ];
     %{
     % if trigger channels were retained in this data, first use 
     % this scaling to mark the break periods (ie. when there are no triggers)
