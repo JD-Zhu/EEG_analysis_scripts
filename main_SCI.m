@@ -300,7 +300,7 @@ for i = 1:length(SubjectIDs)
             % re-reference using avg of all channels
             cfg = [];
             cfg.reref      = 'yes';
-            cfg.implicitref = 'CPz'; % add the online ref channel back into the data
+            cfg.implicitref = 'CPz'; % add the online ref channel back into the data (will be filled with 0)
             cfg.refchannel = 'all'; % which channels to use for offline reref
             cfg.refmethod  = 'avg';
             alldata = ft_preprocessing(cfg, alldata);
@@ -310,7 +310,7 @@ for i = 1:length(SubjectIDs)
             
             cfg = [];
             cfg.reref      = 'yes';
-            cfg.implicitref = 'CPz'; % add the online ref channel back into the data
+            cfg.implicitref = 'CPz'; % add the online ref channel back into the data (will be filled with 0)
             cfg.refchannel = {'M1', 'M2'}; % which channels to use for offline reref
             cfg.refmethod  = 'avg';
             alldata = ft_preprocessing(cfg, alldata);
@@ -446,7 +446,7 @@ for i = 1:length(SubjectIDs)
         
         % this fn takes care of all the plotting 
         % (power spectrum & topo for each freq band)
-        plot_TFR(freq, lay, save_location);
+        plot_TFR(freq, lay, save_location, [1 30], true);
         
         
         % SAVE all relevant variables from the workspace

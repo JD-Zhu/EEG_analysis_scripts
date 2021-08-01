@@ -13,8 +13,8 @@
 common();
 
 % Please specify:
-DataFolder = 'Z:\Analysis\Judy\EpisodicMigraine_EEG\data\migraineurs\'; % this directory should contain all the SubjectFolders
-ResultsFolder = 'Z:\Analysis\Judy\EpisodicMigraine_EEG\results\migraineurs\'; % all subjects' freq analysis results will be stored here
+DataFolder = 'Z:\Analysis\Judy\EpisodicMigraine\data\migraineurs\'; % this directory should contain all the SubjectFolders
+ResultsFolder = 'Z:\Analysis\Judy\EpisodicMigraine\results\migraineurs\'; % all subjects' freq analysis results will be stored here
     
 % find all subject folders containing raw EEG recording
 SubjectIDs = dir([DataFolder 'Subject*']);
@@ -50,23 +50,19 @@ confile_name = '*\*.edf';
 % > which steps to run?
 DO_HPF = true;
 DO_ICA = false; % if we tested human subjects (i.e. not "dry run"), set this to true
-RUN_ICA_ON_1HZ_FILTERED_DATA = false; % for MEG (a lot more channels), we prob don't need to apply 1Hz HPF before running ICA
-                                     % for EEG, this step is recommended, otherwise ICA will just detect all the slow drifts & nothing useful
-                                     % (https://www.youtube.com/watch?v=2hrYEYSycGI    https://jinjeon.me/post/eeg-advanced/)
-                                     % I tried it - ICA decomposition was indeed poor quality if we don't apply HPF first 
-                                     % (doesn't have to be 1Hz though, which actually removes most of the eye artefact; 
-                                     % 0.1Hz seems to work well)
+RUN_ICA_ON_1HZ_FILTERED_DATA = false; % this dataset is already HPF'd at 1Hz, no need to filter again before ICA
 DO_BEH_CHECK = false; % if subjects produced beh responses, set this to true
 DO_PCA = false; % if subjects produced vocal responses, set this to true
 
 % when running many subjects in one batch, process all auto steps until the first manual step
-RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = true;   % auto processing before 1st manual step
+RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = false;   % auto processing before 1st manual step
 RUN_UP_TO_AFTER_MANUAL_ARTEFACT = false;    % perform 1st manual step (mark artefact)
 RUN_UP_TO_ICA = false;                      % auto processing before 2nd manual step (ICA component analysis)
 RUN_UP_TO_ICA_REJECTION = false;            % perform 2nd manual step (select ICA comps to reject)
 
 % > other options:
-CHANNEL_REPAIR = true; % repair bad/rejected channels? set to true for EEG data, as channel rejection leads to unbalanced offline reref
+CHANNEL_REPAIR = false; % repair bad/rejected channels? 
+                       % set this to true for EEG data, as channel rejection leads to unbalanced offline reref
 %CALC_UNCLEANED_ERF = false; % calculate uncleaned erf? (for quality check of response-component rejection)
 
 
@@ -290,6 +286,8 @@ for i = 1:length(SubjectIDs)
         if (CHANNEL_REPAIR)
             % add "elec" field to the data struct (needed for channel repair)
             %elec = ft_read_sens(rawfile, 'senstype','eeg', 'fileformat','easycap_txt');
+            
+            %TODO% create elec file for the 32-channel system! then we can enable channel repair
             load('elec_AntNeuro64.mat'); % just load the version we have already made
             alldata.elec = elec;
             
@@ -303,7 +301,7 @@ for i = 1:length(SubjectIDs)
             % re-reference using avg of all channels
             cfg = [];
             cfg.reref      = 'yes';
-            cfg.implicitref = 'CPz'; % add the online ref channel back into the data
+            %cfg.implicitref = 'CPz'; % add the online ref channel back into the data (will be filled with 0)
             cfg.refchannel = 'all'; % which channels to use for offline reref
             cfg.refmethod  = 'avg';
             alldata = ft_preprocessing(cfg, alldata);
@@ -313,7 +311,7 @@ for i = 1:length(SubjectIDs)
             
             cfg = [];
             cfg.reref      = 'yes';
-            cfg.implicitref = 'CPz'; % add the online ref channel back into the data
+            %cfg.implicitref = 'CPz'; % add the online ref channel back into the data (will be filled with 0)
             cfg.refchannel = {'M1', 'M2'}; % which channels to use for offline reref
             cfg.refmethod  = 'avg';
             alldata = ft_preprocessing(cfg, alldata);
@@ -449,7 +447,7 @@ for i = 1:length(SubjectIDs)
         
         % this fn takes care of all the plotting 
         % (power spectrum & topo for each freq band)
-        plot_TFR(freq, lay, save_location);
+        plot_TFR(freq, lay, save_location, [1 50], false);
         
         
         % SAVE all relevant variables from the workspace

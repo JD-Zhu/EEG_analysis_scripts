@@ -1,4 +1,5 @@
-path = 'Z:\PRJ-Transient\MIGRAINES\EEG\controls\Subject_891\Session 1 (32 Channel)\';
+path = 'Z:\Analysis\Judy\EpisodicMigraine\data\controls\Subject_613\Session 1 (32 Channel)\';
+      %'Z:\PRJ-Transient\MIGRAINES\EEG\controls\Subject_891\Session 1 (32 Channel)\';
       %'Z:\GRP-Henderson\RawPOWMRI_MRIData01\SCITrigemMRIData\Subject_700\Session 1 (32 Channel)\EEG\';
 file = dir([path '*.edf']);
 
@@ -14,5 +15,5 @@ cfg           = [];
 cfg.viewmode  = 'vertical';
 cfg.continous = 'yes';
 cfg.blocksize = 120; % display 2-min segments
-cfg.ylim      = [ -1600  1600 ];
+cfg.ylim      = [ -800  800 ];
 ft_databrowser(cfg, data);

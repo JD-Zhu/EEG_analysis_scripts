@@ -20,6 +20,7 @@ function [selChLabel] = reject_bad_channels(alldata)
     %normal... prob due to diff scaling?)
     % So, instead of using this, just enter the channels you want to reject
     % in the visual summary (below)
+    %{
     cfg                         = [];
     cfg.method                  = 'channel';
     %cfg.method                  = 'summary';
@@ -27,6 +28,7 @@ function [selChLabel] = reject_bad_channels(alldata)
     cfg.keepchannel             = 'no';
     cfg.keeptrial               = 'nan';    
     alldata = ft_rejectvisual(cfg, alldata); 
+    %}
     
     % Display visual summary to find outlier channels
     cfg              = [];

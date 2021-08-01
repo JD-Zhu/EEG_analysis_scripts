@@ -4,10 +4,12 @@
 % @lay              channel layout
 % @save_location    where to save the figures (optional) 
 %                   if you don't want to save, just specify as ''
+% @x_limits         xlim for the power spectrum plot
+% @infraslow        whether to plot infraslow band (true or false)
 %
 % Author: Judy Zhu (github.com/JD-Zhu)
 %
-function plot_TFR(freq, lay, save_location)
+function plot_TFR(freq, lay, save_location, x_limits, infraslow)
 
     % unsquaring (i.e. back to uV unit)
     %bu = freq.powspctrm;
@@ -27,7 +29,7 @@ function plot_TFR(freq, lay, save_location)
     for chan = 1:length(freq.label)
         plot(freq.freq, freq.powspctrm(chan,:))
     end
-    xlim([1 30]);
+    xlim(x_limits);
     xlabel('Frequency (Hz)');
     ylabel('Absolute power (uV^2)');
     hold off;
@@ -36,7 +38,7 @@ function plot_TFR(freq, lay, save_location)
 
     % plot avg of all channels (log transformed)
     figure; plot(freq.freq, mean(log(freq.powspctrm)));
-    xlim([0.01 30]);
+    xlim(x_limits); %[0.01 30]
     xlabel('Frequency (Hz)');
     ylabel('Power (log[uV^2]');
 
@@ -50,7 +52,9 @@ function plot_TFR(freq, lay, save_location)
     %}
 
     % topoplot for each freq band
-    plot_TFR_topo(freq, lay, 'infraslow', [0.03 0.06], save_location)
+    if infraslow
+        plot_TFR_topo(freq, lay, 'infraslow', [0.03 0.06], save_location)
+    end
     plot_TFR_topo(freq, lay, 'theta', [4 8], save_location)
     plot_TFR_topo(freq, lay, 'alpha', [9 12], save_location)
     plot_TFR_topo(freq, lay, 'beta', [13 25], save_location)
