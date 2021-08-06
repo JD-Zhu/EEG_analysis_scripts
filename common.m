@@ -19,10 +19,6 @@ function [] = common()
     %ResultsFolder_ROI = [pwd '\\..\\results_ROI\\']; % all subjects' ROI source-reconstruction results will be stored here
     %ResultsFolder_Source = [pwd '\\..\\results_SOURCE\\']; % all subjects' source localisation results will be stored here
     
-    global filename_suffix; % select which pre-processing option: noPCA, reject components 1:3, or normal (reject components 1:5)
-    % also need to change the last few lines in reject_response_component.m & load correct result files into the ResultsFolder
-    filename_suffix = ''; % '_noPCA'; %'_rejectTop3'; %'';
-    
     % actual EEG channels
     global EEG_chans;
     EEG_chans = [1:12 14:18 20:31 33:64]; % M1=13, M2=19, EOG=32

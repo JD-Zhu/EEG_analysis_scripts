@@ -1,4 +1,4 @@
-path = 'Z:\Analysis\Judy\EpisodicMigraine\data\controls\Subject_613\Session 1 (32 Channel)\';
+path = 'Z:\Analysis\Judy\EpisodicMigraine\data\controls\Subject_636\Session 1 (32 Channel)\';
       %'Z:\PRJ-Transient\MIGRAINES\EEG\controls\Subject_891\Session 1 (32 Channel)\';
       %'Z:\GRP-Henderson\RawPOWMRI_MRIData01\SCITrigemMRIData\Subject_700\Session 1 (32 Channel)\EEG\';
 file = dir([path '*.edf']);

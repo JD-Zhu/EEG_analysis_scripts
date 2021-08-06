@@ -5,11 +5,11 @@
 
 % read the sensor positions
 % https://www.fieldtriptoolbox.org/faq/how_are_electrodes_magnetometers_or_gradiometers_described/
-%chanpos = readtable('chanlocs_XYZ_61_nolabel.txt');
-%elec.chanpos = chanpos;
-%elec.label = all_labels;
-%elec.unit = 'mm';
-load('elec.mat'); % just load the version we have already made, this contains 62 channels (with ref sensor CPz added back)
+chanpos = readtable('chanlocs_XYZ_27chan_nolabels.txt');
+elec.chanpos = chanpos;
+elec.label = all_labels;
+elec.unit = 'mm';
+%load('elec.mat'); % just load the version we have already made, this contains 62 channels (with ref sensor CPz added back)
 
 cfg = [];
 cfg.elec = elec;

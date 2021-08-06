@@ -16,7 +16,7 @@ common();
 DataFolder = 'Z:\Analysis\Judy\EpisodicMigraine\data\migraineurs\'; % this directory should contain all the SubjectFolders
 ResultsFolder = 'Z:\Analysis\Judy\EpisodicMigraine\results\migraineurs\'; % all subjects' freq analysis results will be stored here
     
-% find all subject folders containing raw EEG recording
+% find all subject folders containing raw EEG recordings
 SubjectIDs = dir([DataFolder 'Subject*']);
 %SubjectIDs = [dir([DataFolder 'A*']); dir([DataFolder 'B*'])];
 %SubjectIDs = SubjectIDs([2 3 6]); % only process selected subjects
@@ -34,13 +34,13 @@ SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
 REREF = 'AR'; % we don't have M1 M2 for these data, so just use avg ref
 
 % > create a name for this run (this will create a separate output & Figures folder)
-run_name = ''; %'withICA';
-%run_name = 'offlineHPF';
+run_name = 'EC'; % 'EO';
+file_suffix = ''; % '_rejectFlat' if rejecting (and interpolating) all suspected flat channels
 
 if strcmp(REREF, 'LM')
    run_name = [run_name '_LMref']; 
 end
-output_name = ['output\\' run_name '\\']; % location to save intermediate output files inside each SubjectFolder
+output_name = ['output_' run_name '\\']; % location to save intermediate output files inside each SubjectFolder
 ResultsFolder_thisrun = [ResultsFolder run_name '\\']; % results for all subjects
 mkdir(ResultsFolder_thisrun);
 
@@ -56,7 +56,7 @@ DO_PCA = false; % if subjects produced vocal responses, set this to true
 
 % when running many subjects in one batch, process all auto steps until the first manual step
 RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = false;   % auto processing before 1st manual step
-RUN_UP_TO_AFTER_MANUAL_ARTEFACT = false;    % perform 1st manual step (mark artefact)
+RUN_UP_TO_AFTER_MANUAL_ARTEFACT = true;    % perform 1st manual step (mark artefact)
 RUN_UP_TO_ICA = false;                      % auto processing before 2nd manual step (ICA component analysis)
 RUN_UP_TO_ICA_REJECTION = false;            % perform 2nd manual step (select ICA comps to reject)
 
@@ -69,9 +69,9 @@ CHANNEL_REPAIR = false; % repair bad/rejected channels?
 % =================
 
 % set filenames for saving the output from each stage (so that we don't have to rerun the whole thing from beginning every time)
-S1_output_filename = 'S1_preprocessed_data.mat'; % Stage 1 output (stored inside each Subject folder)
+S1_output_filename = ['S1_preprocessed_data' file_suffix '.mat']; % Stage 1 output (stored inside each Subject folder)
 %S2_output_filename = 'S2_after_visual_rejection.mat'; % Stage 2 output (stored inside each Subject folder)
-S3_output_filename = ['.mat']; % Final output (stored in ResultsFolder for all subjects)
+S3_output_filename = [file_suffix '.mat']; % Final output (stored in ResultsFolder for all subjects)
 
 
 % load layout & neighbours
@@ -162,9 +162,39 @@ for i = 1:length(SubjectIDs)
             continue;
         end
         
+        %{
+        % Troubleshooting of flat channels!
+        % plot fft
+        cfg = [];
+        cfg.output  = 'pow';
+        cfg.channel = 'all';
+        cfg.method  = 'mtmfft';
+        cfg.taper   = 'boxcar';
+        cfg.foi     = 1:1:50; % 1 / cfg1.length = 0.25 (the longer the segments, the more reso we can have here)
+                                  % so for a reso of 0.005Hz, we need at least 1 segment with a length of 1 / 0.005 = 200 seconds
+        freq         = ft_freqanalysis(cfg, alldata);
+
+        figure; hold on;
+        channels = 1:27;
+        channels([6 7 14 22 26]) = [];
+        channels = [9 25];
+        for chan = channels
+            plot(freq.freq, freq.powspctrm(chan,:))
+        end
+        xlim([1 50]);
+        xlabel('Frequency (Hz)');
+        ylabel('Absolute power (uV^2)');
+        hold off;
+        %}
         
+
         % >>>
         % Step 3: manually mark artefact sections
+        
+        % FOR MIGRAINEURS ONLY - automatically extract the EC part (0 - 290 sec)
+        %TODO%
+        
+        
         output_file = [output_path 'arft.mat'];
         
         % if haven't already processed this before, do it now & save a copy
@@ -176,7 +206,7 @@ for i = 1:length(SubjectIDs)
             save(output_file, 'arft', '-v7.3');
         else
             load(output_file);
-        end
+        end       
 
         % reject the manually marked artefact
         arft.artfctdef.reject = 'partial'; 
@@ -198,7 +228,7 @@ for i = 1:length(SubjectIDs)
         
         % >>>
         % Step 4: manually mark bad channels & reject them
-        output_file = [output_path 'selChLabel.mat'];
+        output_file = [output_path 'selChLabel' file_suffix '.mat'];
                 
         % if haven't already processed this before, do it now & save a copy
         if (exist(output_file, 'file') ~= 2)  
@@ -231,7 +261,7 @@ for i = 1:length(SubjectIDs)
         % >>>
         % Step 5: ICA
         if (DO_ICA)
-            output_file = [output_path 'afterICA.mat'];
+            output_file = [output_path 'afterICA' file_suffix '.mat'];
         
             % if haven't already processed this before, do it now & save a copy
             if (exist(output_file, 'file') ~= 2)  
@@ -399,7 +429,7 @@ end
 
 
 %% Stage 3: freq analysis
-
+%{
 for i = 1:length(SubjectIDs)
     
     SubjectID = cell2mat(SubjectIDs(i));
@@ -456,3 +486,4 @@ for i = 1:length(SubjectIDs)
         load(S3_output_file);
     end
 end
+%}
