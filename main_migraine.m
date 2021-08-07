@@ -13,8 +13,10 @@
 common();
 
 % Please specify:
-DataFolder = 'Z:\Analysis\Judy\EpisodicMigraine\data\migraineurs\'; % this directory should contain all the SubjectFolders
-ResultsFolder = 'Z:\Analysis\Judy\EpisodicMigraine\results\migraineurs\'; % all subjects' freq analysis results will be stored here
+subj_group = 'migraineurs'; %'controls';
+
+DataFolder = ['Z:\Analysis\Judy\EpisodicMigraine\data\' subj_group '\']; % this directory should contain all the SubjectFolders
+ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\']; % all subjects' freq analysis results will be stored here
     
 % find all subject folders containing raw EEG recordings
 SubjectIDs = dir([DataFolder 'Subject*']);
@@ -34,14 +36,20 @@ SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
 REREF = 'AR'; % we don't have M1 M2 for these data, so just use avg ref
 
 % > create a name for this run (this will create a separate output & Figures folder)
-run_name = 'EC'; % 'EO';
+run_name = '_EC'; % '_EO';
 file_suffix = ''; % '_rejectFlat' if rejecting (and interpolating) all suspected flat channels
 
 if strcmp(REREF, 'LM')
    run_name = [run_name '_LMref']; 
 end
-output_name = ['output_' run_name '\\']; % location to save intermediate output files inside each SubjectFolder
-ResultsFolder_thisrun = [ResultsFolder run_name '\\']; % results for all subjects
+output_name = ['output' run_name '\\']; % location to save intermediate output files inside each SubjectFolder
+
+% location to save the results for all subjects
+temp_name = run_name(2:end);
+if isempty(temp_name)
+    temp_name = 'full';
+end
+ResultsFolder_thisrun = [ResultsFolder temp_name '\\'];
 mkdir(ResultsFolder_thisrun);
 
 % > name of confile in the SubjectFolder (can use wildcards)
@@ -88,7 +96,7 @@ load('all_labels_migraine_32.mat'); % list of real EEG channels (i.e. excluding 
 
 %% Stage 1: preprocessing
 
-for i = 1:length(SubjectIDs)
+for i = 1%:length(SubjectIDs)
     
     SubjectID = cell2mat(SubjectIDs(i));
     SubjectFolder = [DataFolder SubjectID '\\'];
@@ -176,8 +184,8 @@ for i = 1:length(SubjectIDs)
 
         figure; hold on;
         channels = 1:27;
-        channels([6 7 14 22 26]) = [];
-        channels = [9 25];
+        %channels([6 7 14 22 26]) = [];
+        %channels = [9 25];
         for chan = channels
             plot(freq.freq, freq.powspctrm(chan,:))
         end
@@ -191,9 +199,18 @@ for i = 1:length(SubjectIDs)
         % >>>
         % Step 3: manually mark artefact sections
         
-        % FOR MIGRAINEURS ONLY - automatically extract the EC part (0 - 290 sec)
-        %TODO%
-        
+        % FOR MIGRAINEURS ONLY - automatically extract the EC & EO sections 
+        if strcmp(subj_group, 'migraineurs')
+            if strcmp(run_name, '_EC')
+                cfg = [];
+                cfg.latency = [0 290]; % EC: 0 - 290 sec
+                alldata = ft_selectdata(cfg, alldata);
+            elseif strcmp(run_name, '_EO')
+                cfg = [];
+                cfg.latency = [300 10000]; % EO: 300 sec onwards
+                alldata = ft_selectdata(cfg, alldata);
+            end
+        end
         
         output_file = [output_path 'arft.mat'];
         
@@ -203,11 +220,15 @@ for i = 1:length(SubjectIDs)
             fprintf(['\nCURRENT SUBJECT: ' SubjectID '\n\n']); 
 
             [arft] = mark_artefact(alldata);
-            save(output_file, 'arft', '-v7.3');
+            %save(output_file, 'arft', '-v7.3');
         else
             load(output_file);
         end       
-
+        % If running in batch, skip to next subject now
+        if (RUN_UP_TO_AFTER_MANUAL_ARTEFACT)
+            continue;
+        end    
+        
         % reject the manually marked artefact
         arft.artfctdef.reject = 'partial'; 
                                       % 'nan'; 
@@ -472,7 +493,7 @@ for i = 1:length(SubjectIDs)
 
         
         % where to save the figures
-        save_location = [SubjectFolder 'Figures\\' run_name '\\'];
+        save_location = [SubjectFolder 'Figures' run_name '\\' file_suffix(2:end) '_'];
         mkdir(save_location);
         
         % this fn takes care of all the plotting 
