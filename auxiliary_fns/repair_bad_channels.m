@@ -40,7 +40,9 @@ function data = repair_bad_channels(data, neighbours, all_labels)
     badChannels = all_labels(badchanindx); % get the channel names
 
     cfg = [];
-    cfg.method         = 'spline'; % use spline method for missing channels that lie next to each other
+    cfg.method         = 'spline'; % use spline method if you have bad channels that lie next to each other
+                                    % https://www.fieldtriptoolbox.org/reference/ft_channelrepair/
+                                    % https://mne.tools/0.17/manual/channel_interpolation.html
     cfg.badchannel     = badChannels;
     cfg.missingchannel = {};
     cfg.neighbours     = neighbours;

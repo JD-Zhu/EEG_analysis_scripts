@@ -36,7 +36,7 @@ SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
 REREF = 'AR'; % we don't have M1 M2 for these data, so just use avg ref
 
 % > create a name for this run (this will create a separate output & Figures folder)
-run_name = '_EC'; % '_EO';
+run_name = '_EC_LPF30'; % '_EO';
 file_suffix = ''; % '_rejectFlat' if rejecting (and interpolating) all suspected flat channels
 
 if strcmp(REREF, 'LM')
@@ -63,7 +63,7 @@ DO_BEH_CHECK = false; % if subjects produced beh responses, set this to true
 DO_PCA = false; % if subjects produced vocal responses, set this to true
 
 % when running many subjects in one batch, process all auto steps until the first manual step
-RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = false;   % auto processing before 1st manual step
+RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = true;   % auto processing before 1st manual step
 RUN_UP_TO_AFTER_MANUAL_ARTEFACT = false;    % perform 1st manual step (mark artefact)
 RUN_UP_TO_ICA = false;                      % auto processing before 2nd manual step (ICA component analysis)
 RUN_UP_TO_ICA_REJECTION = false;            % perform 2nd manual step (select ICA comps to reject)
@@ -150,7 +150,8 @@ for i = 1:length(SubjectIDs)
         
         % if haven't already processed this before, do it now & save a copy
         if (exist(output_file, 'file') ~= 2)   
-            [alldata] = filtering(alldata, DO_HPF, 1, 2, 60, 20); % HPF 1+-1Hz; LPF 60+-10Hz
+            %[alldata] = filtering(alldata, DO_HPF, 1, 2, 60, 20); % HPF 1+-1Hz; LPF 60+-10Hz
+            [alldata] = filtering(alldata, DO_HPF, 1, 2, 35, 10); % HPF 1+-1Hz; LPF 35+-5Hz
             
             % save now, because the 0.01Hz HPF TAKES FOREVER to run!
             if (DO_HPF) % to save disk space, only save if we did HPF
@@ -204,11 +205,11 @@ for i = 1:length(SubjectIDs)
         
         % FOR MIGRAINEURS ONLY - automatically extract the EC & EO sections 
         if strcmp(subj_group, 'migraineurs')
-            if strcmp(run_name, '_EC')
+            if strcmp(run_name(1:3), '_EC')
                 cfg = [];
                 cfg.latency = [0 290]; % EC: 0 - 290 sec
                 alldata = ft_selectdata(cfg, alldata);
-            elseif strcmp(run_name, '_EO')
+            elseif strcmp(run_name(1:3), '_EO')
                 cfg = [];
                 cfg.latency = [300 10000]; % EO: 300 sec onwards
                 alldata = ft_selectdata(cfg, alldata);
@@ -451,8 +452,8 @@ end
 
 
 %% Stage 3: freq analysis
-%
-for i = 1:length(SubjectIDs)
+%{
+for i = 4%1:length(SubjectIDs)
     
     SubjectID = cell2mat(SubjectIDs(i));
     SubjectFolder = [DataFolder SubjectID '\\'];
@@ -488,7 +489,7 @@ for i = 1:length(SubjectIDs)
         cfg.channel = 'all';
         cfg.method  = 'mtmfft';
         cfg.taper   = 'boxcar';
-        cfg.foi     = 1:1:50; % 1 / cfg1.length = 0.25 (the longer the segments, the more reso we can have here)
+        cfg.foi     = 1:1:30; % 1 / cfg1.length = 0.25 (the longer the segments, the more reso we can have here)
                                   % so for a reso of 0.005Hz, we need at least 1 segment with a length of 1 / 0.005 = 200 seconds
         freq         = ft_freqanalysis(cfg, all_blocks);
 
@@ -503,7 +504,7 @@ for i = 1:length(SubjectIDs)
         
         % this fn takes care of all the plotting 
         % (power spectrum & topo for each freq band)
-        plot_TFR(freq, lay, save_location, [1 50], false);
+        plot_TFR(freq, lay, save_location, [1 30], false);
         
         
         % SAVE all relevant variables from the workspace
