@@ -1,12 +1,14 @@
+% prepare custom-made layout & neighbours for each M/EEG system
 % only need to do this once & save for later
 
+% Author: Judy Zhu (github.com/JD-Zhu)
 
 %% prepare layout
 
 % read the sensor positions
 % https://www.fieldtriptoolbox.org/faq/how_are_electrodes_magnetometers_or_gradiometers_described/
 chanpos = readtable('chanlocs_XYZ_27chan_nolabels.txt');
-elec.chanpos = chanpos;
+elec.chanpos = table2array(chanpos);
 elec.label = all_labels;
 elec.unit = 'mm';
 %load('elec.mat'); % just load the version we have already made, this contains 62 channels (with ref sensor CPz added back)

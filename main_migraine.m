@@ -64,12 +64,12 @@ DO_PCA = false; % if subjects produced vocal responses, set this to true
 
 % when running many subjects in one batch, process all auto steps until the first manual step
 RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = false;   % auto processing before 1st manual step
-RUN_UP_TO_AFTER_MANUAL_ARTEFACT = true;    % perform 1st manual step (mark artefact)
+RUN_UP_TO_AFTER_MANUAL_ARTEFACT = false;    % perform 1st manual step (mark artefact)
 RUN_UP_TO_ICA = false;                      % auto processing before 2nd manual step (ICA component analysis)
 RUN_UP_TO_ICA_REJECTION = false;            % perform 2nd manual step (select ICA comps to reject)
 
 % > other options:
-CHANNEL_REPAIR = false; % repair bad/rejected channels? 
+CHANNEL_REPAIR = true; % repair bad/rejected channels? 
                        % set this to true for EEG data, as channel rejection leads to unbalanced offline reref
 %CALC_UNCLEANED_ERF = false; % calculate uncleaned erf? (for quality check of response-component rejection)
 
@@ -82,21 +82,17 @@ S1_output_filename = ['S1_preprocessed_data' file_suffix '.mat']; % Stage 1 outp
 S3_output_filename = [file_suffix '.mat']; % Final output (stored in ResultsFolder for all subjects)
 
 
-% load layout & neighbours
-%load('easycapM11.mat'); % easycap doesn't have PO5 & PO6
-load('lay_AntNeuro64.mat'); % use our custom-made layout & neighbours
-load('neighbours_AntNeuro64.mat');
+% load our custom-made layout & neighbours
+% made by: prepare_layout_and_neighbours.m
+load('lay_NeuroPrax32.mat');
 %figure; ft_plot_layout(lay);
-
-%TODO% create lay & neighbours for the 32-channel EEG system
-
-load('all_labels_migraine_32.mat'); % list of real EEG channels (i.e. excluding EOG & ref channels)
-        
+load('neighbours_NeuroPrax32.mat');
+load('all_labels_NeuroPrax32.mat'); % list of real EEG channels (i.e. excluding EOG & ref channels)        
 
 
 %% Stage 1: preprocessing
 
-for i = 1%:length(SubjectIDs)
+for i = 1:length(SubjectIDs)
     
     SubjectID = cell2mat(SubjectIDs(i));
     SubjectFolder = [DataFolder SubjectID '\\'];
@@ -163,7 +159,14 @@ for i = 1%:length(SubjectIDs)
         else
             load(output_file);
         end
-
+        
+        % For NeuroPrax EEG, remove the prefix "EEG " from channel labels
+        % so that later on we can directly type in channel labels in the
+        % ft_rejectvisual GUI (cannot enter directly if label contains space)
+        temp = alldata.label(1:27);
+        temp = cellfun(@(x) x(5:end), temp, 'un', 0); % remove first 4 chars in each cell
+        alldata.label(1:27) = temp;
+        alldata.hdr.label(1:27) = temp; % also update this (just in case)
         
         % If running in batch, skip to next subject now
         if (RUN_UP_TO_BEFORE_MANUAL_ARTEFACT)
@@ -220,7 +223,7 @@ for i = 1%:length(SubjectIDs)
             fprintf(['\nCURRENT SUBJECT: ' SubjectID '\n\n']); 
 
             [arft] = mark_artefact(alldata);
-            %save(output_file, 'arft', '-v7.3');
+            save(output_file, 'arft', '-v7.3');
         else
             load(output_file);
         end       
@@ -337,9 +340,7 @@ for i = 1%:length(SubjectIDs)
         if (CHANNEL_REPAIR)
             % add "elec" field to the data struct (needed for channel repair)
             %elec = ft_read_sens(rawfile, 'senstype','eeg', 'fileformat','easycap_txt');
-            
-            %TODO% create elec file for the 32-channel system! then we can enable channel repair
-            load('elec_AntNeuro64.mat'); % just load the version we have already made
+            load('elec_NeuroPrax32.mat'); % just load the version we have already made
             alldata.elec = elec;
             
             alldata = repair_bad_channels(alldata, neighbours, all_labels);
@@ -450,7 +451,7 @@ end
 
 
 %% Stage 3: freq analysis
-%{
+%
 for i = 1:length(SubjectIDs)
     
     SubjectID = cell2mat(SubjectIDs(i));
@@ -493,8 +494,12 @@ for i = 1:length(SubjectIDs)
 
         
         % where to save the figures
-        save_location = [SubjectFolder 'Figures' run_name '\\' file_suffix(2:end) '_'];
+        save_location = [SubjectFolder 'Figures' run_name '\\'];
         mkdir(save_location);
+        % add prefix to filename if needed
+        if ~isempty(file_suffix)
+            save_location = [save_location file_suffix(2:end) '_'];
+        end
         
         % this fn takes care of all the plotting 
         % (power spectrum & topo for each freq band)
