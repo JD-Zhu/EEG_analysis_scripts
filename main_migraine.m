@@ -63,17 +63,20 @@ DO_BEH_CHECK = false; % if subjects produced beh responses, set this to true
 DO_PCA = false; % if subjects produced vocal responses, set this to true
 
 % when running many subjects in one batch, process all auto steps until the first manual step
-RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = true;   % auto processing before 1st manual step
-RUN_UP_TO_AFTER_MANUAL_ARTEFACT = false;    % perform 1st manual step (mark artefact)
+RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = false;   % auto processing before 1st manual step
+RUN_UP_TO_AFTER_MANUAL_ARTEFACT = true;    % perform 1st manual step (mark artefact)
 RUN_UP_TO_ICA = false;                      % auto processing before 2nd manual step (ICA component analysis)
 RUN_UP_TO_ICA_REJECTION = false;            % perform 2nd manual step (select ICA comps to reject)
 
 % > other options:
-CHANNEL_REPAIR = true; % repair bad/rejected channels? 
+PLOT_CHANNEL_SPECTRA = true; % during initial data inspection, plot channel spectra to help with determining bad channels?
+                             % (this functionality requires EEGLAB)
+                             % Note: channel spectra is plotted on raw data (i.e. before filtering)
+CHANNEL_REPAIR = true; % interpolate rejected channels? 
                        % set this to true for EEG data, as channel rejection leads to unbalanced offline reref
 %CALC_UNCLEANED_ERF = false; % calculate uncleaned erf? (for quality check of response-component rejection)
 
-
+    
 % =================
 
 % set filenames for saving the output from each stage (so that we don't have to rerun the whole thing from beginning every time)
@@ -89,8 +92,15 @@ load('lay_NeuroPrax32.mat');
 load('neighbours_NeuroPrax32.mat');
 load('all_labels_NeuroPrax32.mat'); % list of real EEG channels (i.e. excluding EOG & ref channels)        
 
+% start EEGLAB if needed
+if PLOT_CHANNEL_SPECTRA
+    eeglab;
+end
+
 
 %% Stage 1: preprocessing
+
+good_subjects = [1 3 4 5 9 10 13 16 17 19 20];
 
 for i = 1:length(SubjectIDs)
     
@@ -175,7 +185,7 @@ for i = 1:length(SubjectIDs)
         end
         
         %{
-        % Troubleshooting of flat channels!
+        % TROUBLESHOOTING of flat channels!
         % plot fft
         cfg = [];
         cfg.output  = 'pow';
@@ -223,8 +233,26 @@ for i = 1:length(SubjectIDs)
             % Print out SubjectID so we know which subject we are working on
             fprintf(['\nCURRENT SUBJECT: ' SubjectID '\n\n']); 
 
+            % TROUBLESHOOTING - plot channel spectra (from raw data) using eeglab
+            if PLOT_CHANNEL_SPECTRA
+                EEG = pop_biosig(rawfile, 'blockrange',[0 290]); 
+                EEG = eeg_checkset( EEG );
+                % read chanlocs & remove non-EEG channels
+                if length(EEG.chanlocs) == 33
+                    EEG = pop_chanedit(EEG, 'load',{'Z:\\Analysis\\Judy\\EEG_analysis_scripts\\chanlocs_XYZ_33chan_forEEGLAB.txt' 'filetype' 'sfp'});
+                elseif length(EEG.chanlocs) == 32
+                    EEG = pop_chanedit(EEG, 'load',{'Z:\\Analysis\\Judy\\EEG_analysis_scripts\\chanlocs_XYZ_32chan_forEEGLAB.txt' 'filetype' 'sfp'});
+                end
+                EEG = pop_select( EEG,'nochannel',{'EOG1' 'EOG2' 'REF' 'ECG1' 'ECG2' 'TRIG'});
+                EEG = eeg_checkset( EEG );
+                % plot channel spectra
+                figure('name',[SubjectID ' - spectopo()']); 
+                pop_spectopo(EEG, 1, [0  289998], 'EEG' , 'freq', [10 30 50], 'freqrange',[2 60],'electrodes','off');
+                EEG = eeg_checkset( EEG );
+            end
+            
             [arft] = mark_artefact(alldata);
-            save(output_file, 'arft', '-v7.3');
+            %save(output_file, 'arft', '-v7.3');
         else
             load(output_file);
         end       
