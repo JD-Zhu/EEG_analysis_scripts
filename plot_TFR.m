@@ -36,13 +36,21 @@ function plot_TFR(freq, lay, save_location, x_limits, infraslow)
 
     export_fig(gcf, [save_location 'powspctrm_allchans.png']); % use this tool to save the figure exactly as shown on screen
 
+    % plot avg of all channels
+    figure; plot(freq.freq, mean(freq.powspctrm));
+    xlim(x_limits); %[0.01 30]
+    xlabel('Frequency (Hz)');
+    ylabel('Absolute power (uV^2)');
+    
+    export_fig(gcf, [save_location 'powspctrm_avg.png']); % use this tool to save the figure exactly as shown on screen
+
     % plot avg of all channels (log transformed)
     figure; plot(freq.freq, mean(log(freq.powspctrm)));
     xlim(x_limits); %[0.01 30]
     xlabel('Frequency (Hz)');
     ylabel('Power (log[uV^2]');
 
-    export_fig(gcf, [save_location 'powspctrm_avg.png']); % use this tool to save the figure exactly as shown on screen
+    export_fig(gcf, [save_location 'powspctrm_avg_log.png']); % use this tool to save the figure exactly as shown on screen
 
     %{
     figure; 

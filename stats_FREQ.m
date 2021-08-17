@@ -12,13 +12,15 @@
 % = Settings =
 
 % Please specify correctly:
-run_name = 'offlineHPF_LMref';
+%run_name = 'offlineHPF_LMref';
+run_name = 'EC_LPF30';
 
 
 %%
 % run the #define section
-global ResultsFolder; 
-common();
+%global ResultsFolder; 
+%common();
+ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\migraineurs\'];
 
 ResultsFolder_thisrun = [ResultsFolder run_name '\\']; % where to read in the results for all subjects
 save_location = [ResultsFolder_thisrun 'Figures_GA\\']; % where to save the GA figures
@@ -38,9 +40,10 @@ temp = load([ResultsFolder_thisrun '9002_S1_EC.mat']);
 freq3 = temp.freq;
 %}
 
-files = dir([ResultsFolder_thisrun '*_S1.mat']);
+%files = dir([ResultsFolder_thisrun '*_S1.mat']);
+files = dir([ResultsFolder_thisrun 'Subject_*.mat']);
 
-% each cycle reads in one '.mat' file (i.e. one subject's freq data)
+% each cycle reads in one '.mat' file (i.e. one subject's freq results)
 for i = 1:length(files)
     filename = [ResultsFolder_thisrun files(i).name];
     load(filename);
@@ -48,6 +51,22 @@ for i = 1:length(files)
     allSubjects_freq = [allSubjects_freq freq];
 end
 
+% export the indi-subject freq results to Excel sheet
+Excel_output_file = [save_location 'summary_freq.xls'];
+if (exist(Excel_output_file, 'file') ~= 2)     
+    for i = 1:length(files)
+        % write the heading (SubjectID + channel labels)
+        filename = [ResultsFolder_thisrun files(i).name];
+        SubjectID = ['ID ' filename(end-6:end-4)];
+        writecell([SubjectID 'Freq' all_labels'], Excel_output_file, 'WriteMode','append');
+        
+        % write the power spectrum matrix for this subject
+        M = allSubjects_freq{i}.powspctrm';
+        freq_labels = 1:30;
+        M2 = [NaN(height(M),1) freq_labels' M]; % add an empty col in front, then a second col containing the freq labels (1-30Hz)
+        writematrix(M2, Excel_output_file, 'WriteMode','append');
+    end
+end
 
 % find the channels that all subjects have
 %common_chans = intersect(freq1.label, freq2.label);
@@ -68,8 +87,10 @@ if (exist(GA_output_file, 'file') ~= 2)
 end
 
 % GA Plots (power spectrum & topo for each freq band)
-load('lay_AntNeuro64.mat');
-plot_TFR(GA_freq, lay, save_location);
+%load('lay_AntNeuro64.mat');
+%plot_TFR(GA_freq, lay, save_location, [1 30], true); % include topoplot for infra-slow
+%load('lay_NeuroPrax32.mat');
+plot_TFR(GA_freq, lay, save_location, [2 30], false);
 
 % For sanity check: detailed topoplots (at regular freq interval)
 %{

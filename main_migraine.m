@@ -37,7 +37,7 @@ REREF = 'AR'; % we don't have M1 M2 for these data, so just use avg ref
 
 % > create a name for this run (this will create a separate output & Figures folder)
 run_name = '_EC_LPF30'; % '_EO';
-file_suffix = ''; % '_rejectFlat' if rejecting (and interpolating) all suspected flat channels
+file_suffix = ''; % '_minReject': only reject a noisy chan if it's utterly crazy - keep where possible (note: all flat channels must still be rejected)
 
 if strcmp(REREF, 'LM')
    run_name = [run_name '_LMref']; 
@@ -64,16 +64,17 @@ DO_PCA = false; % if subjects produced vocal responses, set this to true
 
 % when running many subjects in one batch, process all auto steps until the first manual step
 RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = false;   % auto processing before 1st manual step
-RUN_UP_TO_AFTER_MANUAL_ARTEFACT = true;    % perform 1st manual step (mark artefact)
+RUN_UP_TO_AFTER_MANUAL_ARTEFACT = false;    % perform 1st manual step (mark artefact)
 RUN_UP_TO_ICA = false;                      % auto processing before 2nd manual step (ICA component analysis)
 RUN_UP_TO_ICA_REJECTION = false;            % perform 2nd manual step (select ICA comps to reject)
+BROWSING_WITHOUT_SAVE = false;              % browse filtered data - do not save arft & selChLabels
 
 % > other options:
-PLOT_CHANNEL_SPECTRA = true; % during initial data inspection, plot channel spectra to help with determining bad channels?
+PLOT_CHANNEL_SPECTRA = false; % during initial data inspection, plot channel spectra to help with determining bad channels?
                              % (this functionality requires EEGLAB)
                              % Note: channel spectra is plotted on raw data (i.e. before filtering)
 CHANNEL_REPAIR = true; % interpolate rejected channels? 
-                       % set this to true for EEG data, as channel rejection leads to unbalanced offline reref
+                       % set this to true if using "average reference", as channel rejection leads to unbalanced reref
 %CALC_UNCLEANED_ERF = false; % calculate uncleaned erf? (for quality check of response-component rejection)
 
     
@@ -94,15 +95,15 @@ load('all_labels_NeuroPrax32.mat'); % list of real EEG channels (i.e. excluding 
 
 % start EEGLAB if needed
 if PLOT_CHANNEL_SPECTRA
-    eeglab;
+    %eeglab;
 end
 
 
 %% Stage 1: preprocessing
 
-good_subjects = [1 3 4 5 9 10 13 16 17 19 20];
+good_subjects = [1 2 3 4 5 9 10 13 16 17 19 20];
 
-for i = 1:length(SubjectIDs)
+for i = good_subjects%1:length(SubjectIDs)
     
     SubjectID = cell2mat(SubjectIDs(i));
     SubjectFolder = [DataFolder SubjectID '\\'];
@@ -122,8 +123,8 @@ for i = 1:length(SubjectIDs)
         - filtering
         - manually mark bad sections & bad channels
         - remove M1 M2 EOG
-        - ICA artefact rejection
-        - channel repair (interpolation)
+        - ICA artefact rejection (optional)
+        - channel repair / interpolation
         - offline rereferencing
         % trigger-based trial definition (i.e. epoching)
         %}
@@ -138,6 +139,7 @@ for i = 1:length(SubjectIDs)
         % Step 1: read in the raw data
         %hdr = ft_read_header(rawfile);%, 'dataformat','yokogawa_con'); % read header file
          
+        %{
         % ft_definetrial: defines the segments of data that will be read in by FT_PREPROCESSING
         cfg                      = [];
         cfg.trialfun             = 'ft_trialfun_general';
@@ -152,6 +154,7 @@ for i = 1:length(SubjectIDs)
         cfg.detrend    = 'no';
         cfg.continuous = 'yes';
         alldata = ft_preprocessing(cfg);
+        %}
     
     
         % >>>
@@ -252,12 +255,16 @@ for i = 1:length(SubjectIDs)
             end
             
             [arft] = mark_artefact(alldata);
-            %save(output_file, 'arft', '-v7.3');
+            
+            if ~BROWSING_WITHOUT_SAVE
+                save(output_file, 'arft', '-v7.3');
+            end
         else
             load(output_file);
         end       
+        
         % If running in batch, skip to next subject now
-        if (RUN_UP_TO_AFTER_MANUAL_ARTEFACT)
+        if BROWSING_WITHOUT_SAVE
             continue;
         end    
         
@@ -295,7 +302,10 @@ for i = 1:length(SubjectIDs)
             alldata = ft_selectdata(cfg, alldata);       
  
             [selChLabel] = reject_bad_channels(alldata);
-            save(output_file, 'selChLabel', '-v7.3');
+            
+            if ~BROWSING_WITHOUT_SAVE
+                save(output_file, 'selChLabel', '-v7.3');
+            end
         else
             load(output_file);
         end
@@ -480,8 +490,8 @@ end
 
 
 %% Stage 3: freq analysis
-%{
-for i = 4%1:length(SubjectIDs)
+%
+for i = good_subjects%1:length(SubjectIDs)
     
     SubjectID = cell2mat(SubjectIDs(i));
     SubjectFolder = [DataFolder SubjectID '\\'];

@@ -1,4 +1,4 @@
-ID = '677';
+ID = '671';
 data_path = ['Z:\Analysis\Judy\EpisodicMigraine\data\migraineurs\']; % this directory should contain all the SubjectFolders
 
 % find the raw EDF file
