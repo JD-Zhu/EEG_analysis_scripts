@@ -52,13 +52,13 @@ for i = 1:length(files)
 end
 
 % export the indi-subject freq results to Excel sheet
-Excel_output_file = [save_location 'summary_freq.xls'];
+Excel_output_file = [save_location 'summary.xls'];
 if (exist(Excel_output_file, 'file') ~= 2)     
     for i = 1:length(files)
         % write the heading (SubjectID + channel labels)
         filename = [ResultsFolder_thisrun files(i).name];
         SubjectID = ['ID ' filename(end-6:end-4)];
-        writecell([SubjectID 'Freq' all_labels'], Excel_output_file, 'WriteMode','append');
+        writecell([SubjectID 'Freq' allSubjects_freq{i}.label'], Excel_output_file, 'WriteMode','append');
         
         % write the power spectrum matrix for this subject
         M = allSubjects_freq{i}.powspctrm';

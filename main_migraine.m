@@ -370,10 +370,10 @@ for i = good_subjects%1:length(SubjectIDs)
         
 
         % >>>
-        % Step 6: offline rereferencing
+        % Step 6: channel repair
         
-        % Interpolate rejected channels here,
-        % otherwise it would make the offline reref unbalanced. 
+        % Interpolate rejected channels here, otherwise it would make 
+        % the offline reref unbalanced (if using avg ref - see below). 
         % This also avoids having too few channels in the GA (only 
         % those channels present in all subjects will be kept in the GA)
         if (CHANNEL_REPAIR)
@@ -384,7 +384,29 @@ for i = good_subjects%1:length(SubjectIDs)
             
             alldata = repair_bad_channels(alldata, neighbours, all_labels);
         end
+        
+        % Adjust the order of channels so that they are consistent across ptps
+        % (this step is not needed for FT, but if you ever export the
+        % data/results, e.g. to Excel, having a diff channel order for each
+        % ptp would be very confusing/error-prone)
+        % https://mailman.science.ru.nl/pipermail/fieldtrip/2017-March/037333.html
+        % https://mailman.science.ru.nl/pipermail/fieldtrip/2015-March/034890.html
+        
+        idx = arrayfun( @(x)(find(strcmp(alldata.label, x))), all_labels);
+        % adjust chan order in the label field
+        alldata.label = alldata.label(idx);
+        % adjust chan order in the data field (note that there may be 
+        % multiple "trials", e.g. if we manually marked artefact earlier)
+        for n = 1:length(alldata.trial)
+            tmp = alldata.trial{n};
+            tmp = tmp(idx,:);
+            alldata.trial{n} = tmp;
+        end
+        
 
+        % >>>
+        % Step 7: offline rereferencing
+        
         % https://www.fieldtriptoolbox.org/example/rereference/
         % https://www.fieldtriptoolbox.org/workshop/madrid2019/tutorial_cleaning/
         
@@ -410,7 +432,7 @@ for i = good_subjects%1:length(SubjectIDs)
         
         
         % >>>
-        % Step 7: downsample the data for saving
+        % Step 8: downsample the data for saving
         %all_blocks.time(1:end) = all_blocks.time(1); % this avoids numeric round off issues in the time axes upon resampling
         cfg            = [];
         cfg.resamplefs = 250; % sampling freq was 500Hz, best to use a divisor of it (~200Hz is commonly used)
