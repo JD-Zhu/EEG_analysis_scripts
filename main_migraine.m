@@ -20,12 +20,18 @@ ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\']; %
     
 % find all subject folders containing raw EEG recordings
 SubjectIDs = dir([DataFolder 'Subject*']);
-%SubjectIDs = [dir([DataFolder 'A*']); dir([DataFolder 'B*'])];
-%SubjectIDs = SubjectIDs([2 3 6]); % only process selected subjects
-%SubjectIDs([2 13 25]) = []; % remove certain subjects from the list
-
 SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
 %SubjectIDs = {'9008_S1'}; % or manually specify which subjects to process
+
+% manually select which subjects to include in each group:
+good_12_migraineurs = [1 2 3 4 5 9 10 13 16 17 19 20];
+good_12_controls = [];
+
+if strcmp(subj_group, 'migraineurs')
+    good_subjects = good_12_migraineurs;
+elseif strcmp(subj_group, 'controls')
+    good_subjects = good_12_controls;
+end
 
 
 % === Settings ===
@@ -100,8 +106,6 @@ end
 
 
 %% Stage 1: preprocessing
-
-good_subjects = [1 2 3 4 5 9 10 13 16 17 19 20];
 
 for i = good_subjects%1:length(SubjectIDs)
     
@@ -572,5 +576,34 @@ for i = good_subjects%1:length(SubjectIDs)
     else
         load(S3_output_file);
     end
+end
+%}
+
+
+%% Plot "overall power" (i.e. avg'd across sensors) for each subject
+%{
+figure; hold on; % put all subjects in same plot (one line == one subject)
+x_limits = [2 30];
+
+for i = good_subjects%1:length(SubjectIDs)    
+    SubjectID = cell2mat(SubjectIDs(i));
+    SubjectFolder = [DataFolder SubjectID '\\'];
+    
+    output_path = [SubjectFolder output_name];
+    S3_output_file = [ResultsFolder_thisrun SubjectID S3_output_filename];
+    
+    load(S3_output_file);
+    
+    % plot avg of all channels
+    %plot(freq.freq, mean(freq.powspctrm));
+    %xlim(x_limits);
+    %xlabel('Frequency (Hz)');
+    %ylabel('Absolute power (uV^2)');
+    
+    % plot avg of all channels (log transformed)
+    plot(freq.freq, mean(log(freq.powspctrm)));
+    xlim(x_limits);
+    xlabel('Frequency (Hz)');
+    ylabel('Power (log[uV^2]');
 end
 %}
