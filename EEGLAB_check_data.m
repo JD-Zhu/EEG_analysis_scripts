@@ -1,5 +1,7 @@
-ID = '671';
-data_path = ['Z:\Analysis\Judy\EpisodicMigraine\data\migraineurs\']; % this directory should contain all the SubjectFolders
+ID = '809';
+data_path = ['Z:\Analysis\Judy\EpisodicMigraine\data\controls\']; % this directory should contain all the SubjectFolders
+
+%eeglab;
 
 % find the raw EDF file
 SubjectID = ['Subject_' ID];

@@ -14,13 +14,15 @@
 % Please specify correctly:
 %run_name = 'offlineHPF_LMref';
 run_name = 'EC_LPF30';
+subj_group = 'controls'; %'migraineurs';
 
 
 %%
 % run the #define section
 %global ResultsFolder; 
 %common();
-ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\migraineurs\'];
+
+ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\'];
 
 ResultsFolder_thisrun = [ResultsFolder run_name '\\']; % where to read in the results for all subjects
 save_location = [ResultsFolder_thisrun 'Figures_GA\\']; % where to save the GA figures

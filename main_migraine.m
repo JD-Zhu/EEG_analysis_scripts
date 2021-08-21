@@ -76,7 +76,7 @@ RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = false;   % auto processing before 1st manual 
 RUN_UP_TO_AFTER_MANUAL_ARTEFACT = false;    % perform 1st manual step (mark artefact)
 RUN_UP_TO_ICA = false;                      % auto processing before 2nd manual step (ICA component analysis)
 RUN_UP_TO_ICA_REJECTION = false;            % perform 2nd manual step (select ICA comps to reject)
-BROWSING_WITHOUT_SAVE = true;              % browse filtered data - do not save arft & selChLabels
+BROWSING_WITHOUT_SAVE = false;              % browse filtered data - do not save arft & selChLabels
 
 % > other options:
 PLOT_CHANNEL_SPECTRA = false; % during initial data inspection, plot channel spectra to help with determining bad channels?
@@ -595,11 +595,11 @@ end
 
 
 %% Plot "overall power" (i.e. avg'd across sensors) for each subject
-%{
+
 figure; hold on; % put all subjects in same plot (one line == one subject)
 x_limits = [2 30];
 
-for i = good_subjects%1:length(SubjectIDs)    
+for i = 1:length(SubjectIDs)    
     SubjectID = cell2mat(SubjectIDs(i));
     SubjectFolder = [DataFolder SubjectID '\\'];
     
@@ -609,15 +609,14 @@ for i = good_subjects%1:length(SubjectIDs)
     load(S3_output_file);
     
     % plot avg of all channels
-    %plot(freq.freq, mean(freq.powspctrm));
-    %xlim(x_limits);
-    %xlabel('Frequency (Hz)');
-    %ylabel('Absolute power (uV^2)');
-    
-    % plot avg of all channels (log transformed)
-    plot(freq.freq, mean(log(freq.powspctrm)));
+    plot(freq.freq, mean(freq.powspctrm));
     xlim(x_limits);
     xlabel('Frequency (Hz)');
-    ylabel('Power (log[uV^2]');
+    ylabel('Absolute power (uV^2)');
+    
+    % plot avg of all channels (log transformed)
+    %plot(freq.freq, mean(log(freq.powspctrm)));
+    %xlim(x_limits);
+    %xlabel('Frequency (Hz)');
+    %ylabel('Power (log[uV^2]');
 end
-%}
