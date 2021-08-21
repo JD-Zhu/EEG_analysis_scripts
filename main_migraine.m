@@ -26,9 +26,9 @@ ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\']; %
 migraineurs_12 = {'Subject_500', 'Subject_548', 'Subject_583', 'Subject_661', ...
             'Subject_664', 'Subject_671', 'Subject_673', 'Subject_677', ...
             'Subject_680', 'Subject_681', 'Subject_696', 'Subject_800'};
-controls_12 = {'Subject_101', 'Subject_495', 'Subject_622', 'Subject_634', ... 
-            'Subject_642', 'Subject_675', 'Subject_690', 'Subject_809', ...
-            'Subject_844', 'Subject_885', 'Subject_886', 'Subject_891'};
+controls_12 = {'Subject_101', 'Subject_495', 'Subject_622', 'Subject_624', ...
+            'Subject_634', 'Subject_642', 'Subject_675', 'Subject_690', ...
+            'Subject_809', 'Subject_885', 'Subject_886', 'Subject_891'};
 
 if strcmp(subj_group, 'migraineurs')
     SubjectIDs = migraineurs_12;
@@ -170,7 +170,7 @@ for i = 1:length(SubjectIDs)
             alldata = ft_preprocessing(cfg);            
             
             
-            % specify filtering settings here:
+            % Specify filtering settings here:
             %[alldata] = filtering(alldata, DO_HPF, 1, 2, 60, 20); % HPF 1+-1Hz; LPF 60+-10Hz
             [alldata] = filtering(alldata, DO_HPF, 1, 2, 35, 10); % HPF 1+-1Hz; LPF 35+-5Hz
             
@@ -224,19 +224,26 @@ for i = 1:length(SubjectIDs)
         alldata.label(1:27) = temp;
         alldata.hdr.label(1:27) = temp; % also update this (just in case)
         
-        % FOR MIGRAINEURS ONLY - automatically extract the EC & EO sections 
-        if strcmp(subj_group, 'migraineurs')
+        % Extract the EC / EO section of the recording
+        if strcmp(subj_group, 'migraineurs') % for migraineurs, all subjects had the same timing
             if strcmp(run_name(1:3), '_EC')
-                cfg = [];
-                cfg.latency = [0 290]; % EC: 0 - 290 sec
-                alldata = ft_selectdata(cfg, alldata);
+                latency = [0 290]; % EC: 0 - 290 sec
             elseif strcmp(run_name(1:3), '_EO')
-                cfg = [];
-                cfg.latency = [300 10000]; % EO: from 300 sec onwards
-                alldata = ft_selectdata(cfg, alldata);
+                latency = [300 10000]; % EO: from 300 sec onwards
+            end
+        elseif strcmp(subj_group, 'controls') % for controls, look up the timing we manually created and saved for each subject
+            load([SubjectFolder 'EC_EO_timing.mat']);
+            if strcmp(run_name(1:3), '_EC')
+                latency = EC_EO_timing.EC;
+            elseif strcmp(run_name(1:3), '_EO')
+                latency = EC_EO_timing.EO;
             end
         end
-        
+        % now keep the relevant section of data & discard the rest
+        cfg = [];
+        cfg.latency = latency;
+        alldata = ft_selectdata(cfg, alldata);
+
         
         % >>>
         % Step 3: manually mark artefact sections
