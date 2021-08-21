@@ -13,24 +13,27 @@
 common();
 
 % Please specify:
-subj_group = 'migraineurs'; %'controls';
+subj_group = 'controls'; %'migraineurs'; %'controls';
 
 DataFolder = ['Z:\Analysis\Judy\EpisodicMigraine\data\' subj_group '\']; % this directory should contain all the SubjectFolders
 ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\']; % all subjects' freq analysis results will be stored here
     
 % find all subject folders containing raw EEG recordings
-SubjectIDs = dir([DataFolder 'Subject*']);
-SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
-%SubjectIDs = {'9008_S1'}; % or manually specify which subjects to process
+%SubjectIDs = dir([DataFolder 'Subject*']);
+%SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
 
-% manually select which subjects to include in each group:
-good_12_migraineurs = [1 2 3 4 5 9 10 13 16 17 19 20];
-good_12_controls = [];
+% alternatively: manually specify which subjects to process
+migraineurs_12 = {'Subject_500', 'Subject_548', 'Subject_583', 'Subject_661', ...
+            'Subject_664', 'Subject_671', 'Subject_673', 'Subject_677', ...
+            'Subject_680', 'Subject_681', 'Subject_696', 'Subject_800'};
+controls_12 = {'Subject_101', 'Subject_495', 'Subject_622', 'Subject_634', ... 
+            'Subject_642', 'Subject_675', 'Subject_690', 'Subject_809', ...
+            'Subject_844', 'Subject_885', 'Subject_886', 'Subject_891'};
 
 if strcmp(subj_group, 'migraineurs')
-    good_subjects = good_12_migraineurs;
+    SubjectIDs = migraineurs_12;
 elseif strcmp(subj_group, 'controls')
-    good_subjects = good_12_controls;
+    SubjectIDs = controls_12;
 end
 
 
@@ -73,7 +76,7 @@ RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = false;   % auto processing before 1st manual 
 RUN_UP_TO_AFTER_MANUAL_ARTEFACT = false;    % perform 1st manual step (mark artefact)
 RUN_UP_TO_ICA = false;                      % auto processing before 2nd manual step (ICA component analysis)
 RUN_UP_TO_ICA_REJECTION = false;            % perform 2nd manual step (select ICA comps to reject)
-BROWSING_WITHOUT_SAVE = false;              % browse filtered data - do not save arft & selChLabels
+BROWSING_WITHOUT_SAVE = true;              % browse filtered data - do not save arft & selChLabels
 
 % > other options:
 PLOT_CHANNEL_SPECTRA = false; % during initial data inspection, plot channel spectra to help with determining bad channels?
@@ -107,7 +110,7 @@ end
 
 %% Stage 1: preprocessing
 
-for i = good_subjects%1:length(SubjectIDs)
+for i = 1:length(SubjectIDs)
     
     SubjectID = cell2mat(SubjectIDs(i));
     SubjectFolder = [DataFolder SubjectID '\\'];
@@ -517,7 +520,7 @@ end
 
 %% Stage 3: freq analysis
 %
-for i = good_subjects%1:length(SubjectIDs)
+for i = 1:length(SubjectIDs)
     
     SubjectID = cell2mat(SubjectIDs(i));
     SubjectFolder = [DataFolder SubjectID '\\'];
