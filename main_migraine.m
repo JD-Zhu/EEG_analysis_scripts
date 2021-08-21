@@ -141,35 +141,36 @@ for i = 1:length(SubjectIDs)
         files = dir(fullfile(SubjectFolder, confile_name));
         rawfile = fullfile(files(1).folder, files(1).name);
 
-            
+        
         % >>>
-        % Step 1: read in the raw data
-        %hdr = ft_read_header(rawfile);%, 'dataformat','yokogawa_con'); % read header file
-         
-        %{
-        % ft_definetrial: defines the segments of data that will be read in by FT_PREPROCESSING
-        cfg                      = [];
-        cfg.trialfun             = 'ft_trialfun_general';
-        cfg.datafile             = rawfile;
-        %cfg.headerfile           = [rawfile(1:end-3) 'vhdr'];
-        cfg.trialdef.triallength = Inf;
-        cfg.trialdef.ntrials     = 1; % read in all data as a single segment, coz filtering should be done on continuous data
-        cfg = ft_definetrial(cfg);
-
-        % https://www.fieldtriptoolbox.org/workshop/madrid2019/tutorial_cleaning/
-        cfg.demean     = 'yes';
-        cfg.detrend    = 'no';
-        cfg.continuous = 'yes';
-        alldata = ft_preprocessing(cfg);
-        %}
-    
-    
-        % >>>
-        % Step 2: filtering
+        % Step 1: filtering
         output_file = [output_path 'filtered.mat'];
         
         % if haven't already processed this before, do it now & save a copy
-        if (exist(output_file, 'file') ~= 2)   
+        if (exist(output_file, 'file') ~= 2) 
+            % first, read in the raw data
+            % (keep this code here - rather than moving into filtering.m -
+            % coz the cfg for ft_definetrial may need to be customised for each dataset)
+            
+            %hdr = ft_read_header(rawfile);%, 'dataformat','yokogawa_con'); % read header file         
+
+            % ft_definetrial: defines the segments of data that will be read in by FT_PREPROCESSING
+            cfg                      = [];
+            cfg.trialfun             = 'ft_trialfun_general';
+            cfg.datafile             = rawfile;
+            %cfg.headerfile           = [rawfile(1:end-3) 'vhdr'];
+            cfg.trialdef.triallength = Inf;
+            cfg.trialdef.ntrials     = 1; % read in all data as a single segment, coz filtering should be done on continuous data
+            cfg = ft_definetrial(cfg);
+
+            % https://www.fieldtriptoolbox.org/workshop/madrid2019/tutorial_cleaning/
+            cfg.demean     = 'yes';
+            cfg.detrend    = 'no';
+            cfg.continuous = 'yes';
+            alldata = ft_preprocessing(cfg);            
+            
+            
+            % specify filtering settings here:
             %[alldata] = filtering(alldata, DO_HPF, 1, 2, 60, 20); % HPF 1+-1Hz; LPF 60+-10Hz
             [alldata] = filtering(alldata, DO_HPF, 1, 2, 35, 10); % HPF 1+-1Hz; LPF 35+-5Hz
             
@@ -180,14 +181,6 @@ for i = 1:length(SubjectIDs)
         else
             load(output_file);
         end
-        
-        % For NeuroPrax EEG, remove the prefix "EEG " from channel labels
-        % so that later on we can directly type in channel labels in the
-        % ft_rejectvisual GUI (cannot enter directly if label contains space)
-        temp = alldata.label(1:27);
-        temp = cellfun(@(x) x(5:end), temp, 'un', 0); % remove first 4 chars in each cell
-        alldata.label(1:27) = temp;
-        alldata.hdr.label(1:27) = temp; % also update this (just in case)
         
         % If running in batch, skip to next subject now
         if (RUN_UP_TO_BEFORE_MANUAL_ARTEFACT)
@@ -219,9 +212,17 @@ for i = 1:length(SubjectIDs)
         hold off;
         %}
         
-
+        
         % >>>
-        % Step 3: manually mark artefact sections
+        % Step 2: do some additional processing (for migraine study only)        
+
+        % For NeuroPrax EEG, remove the prefix "EEG " from channel labels
+        % so that later on we can directly type in channel labels in the
+        % ft_rejectvisual GUI (cannot enter directly if label contains space)
+        temp = alldata.label(1:27);
+        temp = cellfun(@(x) x(5:end), temp, 'un', 0); % remove first 4 chars in each cell
+        alldata.label(1:27) = temp;
+        alldata.hdr.label(1:27) = temp; % also update this (just in case)
         
         % FOR MIGRAINEURS ONLY - automatically extract the EC & EO sections 
         if strcmp(subj_group, 'migraineurs')
@@ -231,11 +232,14 @@ for i = 1:length(SubjectIDs)
                 alldata = ft_selectdata(cfg, alldata);
             elseif strcmp(run_name(1:3), '_EO')
                 cfg = [];
-                cfg.latency = [300 10000]; % EO: 300 sec onwards
+                cfg.latency = [300 10000]; % EO: from 300 sec onwards
                 alldata = ft_selectdata(cfg, alldata);
             end
         end
         
+        
+        % >>>
+        % Step 3: manually mark artefact sections
         output_file = [output_path 'arft.mat'];
         
         % if haven't already processed this before, do it now & save a copy
