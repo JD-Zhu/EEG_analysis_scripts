@@ -595,7 +595,8 @@ end
 
 
 %% Plot "overall power" (i.e. avg'd across sensors) for each subject
-
+% (now moved into stats_FREQ.m)
+%{
 figure; hold on; % put all subjects in same plot (one line == one subject)
 x_limits = [2 30];
 
@@ -620,3 +621,5 @@ for i = 1:length(SubjectIDs)
     %xlabel('Frequency (Hz)');
     %ylabel('Power (log[uV^2]');
 end
+hold off;
+%}

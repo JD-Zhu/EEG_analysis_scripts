@@ -31,7 +31,7 @@ mkdir(save_location);
 allSubjects_freq = {};
 
 
-%% Read in data & compute GA (i.e. average across subjects)
+%% Read in each subject's result file & plot overall power, then collate results for all subjects into one Excel file
 
 %{
 temp = load([ResultsFolder_thisrun '552_S1_offline0.01HPF_noICA_carefulReject.mat']);
@@ -45,15 +45,29 @@ freq3 = temp.freq;
 %files = dir([ResultsFolder_thisrun '*_S1.mat']);
 files = dir([ResultsFolder_thisrun 'Subject_*.mat']);
 
+% plot "overall power" for each subject,
+% putting all subjects in same plot (one line == one subject)
+figure; hold on;
+x_limits = [2 30];
+
 % each cycle reads in one '.mat' file (i.e. one subject's freq results)
 for i = 1:length(files)
     filename = [ResultsFolder_thisrun files(i).name];
     load(filename);
     
+    % add to cell array
     allSubjects_freq = [allSubjects_freq freq];
+    
+    % also plot the "overall power" (i.e. avg of all sensors) for this subject
+    plot(freq.freq, mean(freq.powspctrm));
+    xlim(x_limits);
+    xlabel('Frequency (Hz)');
+    ylabel('Absolute power (uV^2)');
 end
+hold off;
 
-% export the indi-subject freq results to Excel sheet
+
+% Export the indi-subject freq results to Excel sheet
 Excel_output_file = [save_location 'summary.xls'];
 if (exist(Excel_output_file, 'file') ~= 2)     
     for i = 1:length(files)
@@ -70,11 +84,13 @@ if (exist(Excel_output_file, 'file') ~= 2)
     end
 end
 
+
+%% Compute GA (i.e. average across subjects)
+
 % find the channels that all subjects have
 %common_chans = intersect(freq1.label, freq2.label);
 %common_chans = intersect(common_chans, freq3.label);
 
-% compute GA
 cfg = [];
 %cfg.foilim = [0 30];
 %cfg.channel = common_chans;
