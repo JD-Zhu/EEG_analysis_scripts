@@ -14,7 +14,7 @@
 % Please specify correctly:
 %run_name = 'offlineHPF_LMref';
 run_name = 'EC_LPF30';
-subj_group = 'controls'; %'migraineurs';
+subj_group = 'migraineurs';% 'controls'; %
 
 
 %%
@@ -66,6 +66,9 @@ for i = 1:length(files)
 end
 hold off;
 
+% save the plot
+export_fig(gcf, [save_location 'overall_power_12subj.png']); % use this tool to save the figure exactly as shown on screen
+
 
 % Export the indi-subject freq results to Excel sheet
 Excel_output_file = [save_location 'summary.xls'];
@@ -96,12 +99,19 @@ cfg = [];
 %cfg.channel = common_chans;
 %cfg.nanmean = 'yes'; % this is no use - it will only GA the common channels,
 % coz we didn't keep the rejected chans as 'nan' (as that would cause problems in ft_freqanalysis)
+cfg.keepindividual = 'no'; % average across subjects
 GA_freq = ft_freqgrandaverage(cfg, allSubjects_freq{:});
+cfg.keepindividual = 'yes'; % do not average across subjects, keep the data for each individual subject
+GA_freq_indi = ft_freqgrandaverage(cfg, allSubjects_freq{:});
 
-% save the GA
+% save the GA files
 GA_output_file = [save_location 'GA_avg.mat'];
 if (exist(GA_output_file, 'file') ~= 2) 
     save(GA_output_file, 'GA_freq');
+end
+GA_output_file = [save_location 'GA_individuals.mat'];
+if (exist(GA_output_file, 'file') ~= 2) 
+    save(GA_output_file, 'GA_freq_indi');
 end
 
 % GA Plots (power spectrum & topo for each freq band)
