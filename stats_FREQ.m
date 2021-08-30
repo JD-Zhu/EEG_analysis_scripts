@@ -24,8 +24,8 @@ subj_group = 'migraineurs';% 'controls'; %
 
 ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\'];
 
-ResultsFolder_thisrun = [ResultsFolder run_name '\\']; % where to read in the results for all subjects
-save_location = [ResultsFolder_thisrun 'Figures_GA\\']; % where to save the GA figures
+ResultsFolder_thisrun = [ResultsFolder run_name '\']; % where to read in the results for all subjects
+save_location = [ResultsFolder_thisrun 'GA_' subj_group '\']; % where to save the GA & figures
 mkdir(save_location);
 
 allSubjects_freq = {};

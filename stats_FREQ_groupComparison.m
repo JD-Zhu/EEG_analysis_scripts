@@ -1,6 +1,6 @@
 % location of results folder for each group:
-migraineurs_folder = 'Z:\Analysis\Judy\EpisodicMigraine\results\migraineurs\EC_LPF30\Figures_GA\';
-controls_folder = 'Z:\Analysis\Judy\EpisodicMigraine\results\controls\EC_LPF30\Figures_GA\';
+migraineurs_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\12vs12\GA_migraineurs\';
+controls_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\12vs12\GA_controls\';
 
 
 %% plot overall power (mig vs ctrl)
