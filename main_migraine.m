@@ -13,14 +13,14 @@
 common();
 
 % Please specify:
-subj_group = 'controls'; %'migraineurs'; %'controls';
+subj_group = 'controls';%'migraineurs'; %'controls';
 
 DataFolder = ['Z:\Analysis\Judy\EpisodicMigraine\data\' subj_group '\']; % this directory should contain all the SubjectFolders
 ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\']; % all subjects' freq analysis results will be stored here
     
 % find all subject folders containing raw EEG recordings
-%SubjectIDs = dir([DataFolder 'Subject*']);
-%SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
+SubjectIDs = dir([DataFolder 'Subject*']);
+SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
 
 % alternatively: manually specify which subjects to process
 migraineurs_12 = {'Subject_500', 'Subject_548', 'Subject_583', 'Subject_661', ...
@@ -253,6 +253,18 @@ for i = 1:length(SubjectIDs)
         if (exist(output_file, 'file') ~= 2)   
             % Print out SubjectID so we know which subject we are working on
             fprintf(['\nCURRENT SUBJECT: ' SubjectID '\n\n']); 
+            
+            % print out the auto-detected noisy channels (based on RMS) 
+            % this can be used as ref during the visual inspection
+            list_NoisyChans = '';
+            counter_NoisyChans = 0;
+            for chan = 1:length(all_labels) % only check the 27 real channels
+                if rms(alldata.trial{1,1}(chan,:)) > 35 % threshold for EC: 35
+                    list_NoisyChans = [list_NoisyChans ' ' int2str(chan)]; % add chan to list
+                    counter_NoisyChans = counter_NoisyChans + 1; % increment counter
+                end
+            end
+            fprintf('Suggest removing at least %d channels (rms > 35): %s\n', counter_NoisyChans, list_NoisyChans);
 
             % TROUBLESHOOTING - plot channel spectra (from raw data) using eeglab
             if PLOT_CHANNEL_SPECTRA
