@@ -13,7 +13,7 @@
 common();
 
 % Please specify:
-subj_group = 'controls';%'migraineurs'; %'controls';
+subj_group = 'controls'; %'migraineurs'; %'controls';
 
 DataFolder = ['Z:\Analysis\Judy\EpisodicMigraine\data\' subj_group '\']; % this directory should contain all the SubjectFolders
 ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\']; % all subjects' freq analysis results will be stored here
@@ -29,11 +29,14 @@ migraineurs_12 = {'Subject_500', 'Subject_548', 'Subject_583', 'Subject_661', ..
 controls_12 = {'Subject_101', 'Subject_495', 'Subject_622', 'Subject_624', ...
             'Subject_634', 'Subject_642', 'Subject_675', 'Subject_690', ...
             'Subject_809', 'Subject_885', 'Subject_886', 'Subject_891'};
+remaining_13_ctrls = {'Subject_608', 'Subject_610', 'Subject_613', 'Subject_623', ...
+                'Subject_629', 'Subject_631', 'Subject_640', 'Subject_645', ...
+                'Subject_682', 'Subject_804', 'Subject_808', 'Subject_844', 'Subject_846'};
 
 if strcmp(subj_group, 'migraineurs')
     SubjectIDs = migraineurs_12;
 elseif strcmp(subj_group, 'controls')
-    SubjectIDs = controls_12;
+    SubjectIDs = remaining_13_ctrls;
 end
 
 
