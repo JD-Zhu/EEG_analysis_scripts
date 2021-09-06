@@ -1,4 +1,4 @@
-ID = '809';
+ID = '613';
 data_path = ['Z:\Analysis\Judy\EpisodicMigraine\data\controls\']; % this directory should contain all the SubjectFolders
 
 %eeglab;
@@ -11,7 +11,7 @@ files = dir(fullfile(folder, confile_name));
 rawfile = fullfile(files(1).folder, files(1).name);
 
 % read in EC portion (first 290 sec)
-EEG = pop_biosig(rawfile, 'blockrange',[0 290]); 
+EEG = pop_biosig(rawfile, 'blockrange',[360 600]); 
 EEG.setname = ID;
 EEG = eeg_checkset( EEG );
 

@@ -82,7 +82,7 @@ RUN_UP_TO_ICA_REJECTION = false;            % perform 2nd manual step (select IC
 BROWSING_WITHOUT_SAVE = false;              % browse filtered data - do not save arft & selChLabels
 
 % > other options:
-PLOT_CHANNEL_SPECTRA = false; % during initial data inspection, plot channel spectra to help with determining bad channels?
+PLOT_CHANNEL_SPECTRA = true; % during initial data inspection, plot channel spectra to help with determining bad channels?
                              % (this functionality requires EEGLAB)
                              % Note: channel spectra is plotted on raw data (i.e. before filtering)
 CHANNEL_REPAIR = true; % interpolate rejected channels? 

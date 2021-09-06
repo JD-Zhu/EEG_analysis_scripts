@@ -14,7 +14,7 @@
 % Please specify correctly:
 %run_name = 'offlineHPF_LMref';
 run_name = 'EC_LPF30';
-subj_group = 'migraineurs';% 'controls'; %
+subj_group = 'controls'; %'migraineurs';
 
 
 %%
@@ -31,6 +31,10 @@ mkdir(save_location);
 allSubjects_freq = {};
 
 
+% PLEASE LOAD the SubjectIDs variable - the GA will be based on these subjs only:
+SubjectIDs = {};
+
+
 %% Read in each subject's result file & plot overall power, then collate results for all subjects into one Excel file
 
 %{
@@ -43,7 +47,7 @@ freq3 = temp.freq;
 %}
 
 %files = dir([ResultsFolder_thisrun '*_S1.mat']);
-files = dir([ResultsFolder_thisrun 'Subject_*.mat']);
+%files = dir([ResultsFolder_thisrun 'Subject_*.mat']);
 
 % plot "overall power" for each subject,
 % putting all subjects in same plot (one line == one subject)
@@ -51,8 +55,10 @@ figure; hold on;
 x_limits = [2 30];
 
 % each cycle reads in one '.mat' file (i.e. one subject's freq results)
-for i = 1:length(files)
-    filename = [ResultsFolder_thisrun files(i).name];
+for i = 1:length(SubjectIDs)
+    %filename = [ResultsFolder_thisrun files(i).name];
+    filename = [ResultsFolder_thisrun cell2mat(SubjectIDs(i)) '.mat'];
+
     load(filename);
     
     % add to cell array
@@ -67,15 +73,15 @@ end
 hold off;
 
 % save the plot
-export_fig(gcf, [save_location 'overall_power_12subj.png']); % use this tool to save the figure exactly as shown on screen
+export_fig(gcf, [save_location 'overall_power_' int2str(length(SubjectIDs)) 'subj.png']); % use this tool to save the figure exactly as shown on screen
 
 
 % Export the indi-subject freq results to Excel sheet
 Excel_output_file = [save_location 'summary.xls'];
 if (exist(Excel_output_file, 'file') ~= 2)     
-    for i = 1:length(files)
+    for i = 1:length(SubjectIDs)
         % write the heading (SubjectID + channel labels)
-        filename = [ResultsFolder_thisrun files(i).name];
+        filename = [ResultsFolder_thisrun cell2mat(SubjectIDs(i))];
         SubjectID = ['ID ' filename(end-6:end-4)];
         writecell([SubjectID 'Freq' allSubjects_freq{i}.label'], Excel_output_file, 'WriteMode','append');
         

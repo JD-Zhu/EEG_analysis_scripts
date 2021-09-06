@@ -17,6 +17,7 @@ function plot_TFR_topo(freq, lay, freq_band, freq_range, save_location)
     cfg.marker       = 'on';
     cfg.style        = 'straight'; % 'both';
     cfg.colorbar     = 'yes';
+    cfg.comment      = 'xlim';
     cfg.layout       = lay;
     figure; title(freq_band);
     ft_topoplotTFR(cfg, freq); 

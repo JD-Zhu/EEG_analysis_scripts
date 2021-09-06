@@ -1,5 +1,5 @@
 % SPECIFY the folder for this statistical analysis
-stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\12vs12\';
+stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\25vs12\';
 
 
 % location of freq results for each group:
@@ -35,7 +35,7 @@ export_fig(gcf, [stats_folder 'overall_power_mig-vs-ctrl.png']);
 
 
 %% run t-test (mig vs ctrl) on a particular freq range
-freq_range = [8:10];
+freq_range = [9:12];
 
 mig = squeeze(mean(mig_indi.powspctrm, 2)); % avg over all channels
 ctrl = squeeze(mean(ctrl_indi.powspctrm, 2)); % avg over all channels
@@ -67,11 +67,42 @@ for i = 1:N_chan % loop through each channel
     end
 end
 
+figure; title('t-values (migraineurs > controls)');
 imagesc(t_values)
 colorbar
 ylabel('EEG channel');
 xlabel('Frequency (Hz)');
-title('t-values (migraineurs > controls)');
+
+export_fig(gcf, [stats_folder 'indi-chan-analysis.png']);
+
+
+%% Figure 2b
+freq_range = [9:12];
+
+% for each channel, compute average power over the selected freq range
+N_chan = size(mig_indi.powspctrm, 2); % number of channels
+
+% initialise an array to store the t-value for each channel
+t_values = zeros(N_chan, 1);
+
+for i = 1:N_chan % loop through each channel
+    a = mig_indi.powspctrm(:,i,freq_range); % extract power for all migraineurs (only for the selected freq range)
+    a = mean(a,3); % take the mean over that freq range
+    b = ctrl_indi.powspctrm(:,i,freq_range); % do the same for controls
+    b = mean(b,3); 
+    
+    [h,p,ci,stats] = ttest2(a, b, 'Vartype','unequal'); % or should it be equal variance?
+    t_values(i) = stats.tstat; % store the t-value into the array
+end
+
+% create a dummy var for plotting
+freq = GA_freq;
+freq.powspctrm = t_values;
+freq.freq = 0; % we no longer have a frequency dimension, just fill with a dummy value
+
+% plot topography based on the t-values
+load('lay_NeuroPrax32.mat');
+plot_TFR_topo(freq, lay, 'alpha', [], [stats_folder 'indi-chan-analysis_tvalues_'])
 
 
 %% plot the topography difference btwn two groups (like in Flavia's paper)
@@ -81,11 +112,11 @@ title('t-values (migraineurs > controls)');
 % whereas Flavia plotted the t-values
 
 % calculate the difference GA
-diff = mig_avg;
-diff.powspctrm = mig_avg.powspctrm - ctrl_avg.powspctrm;
+diff_GA = mig_avg;
+diff_GA.powspctrm = mig_avg.powspctrm - ctrl_avg.powspctrm;
 
 % plot topography based on the difference GA
 load('lay_NeuroPrax32.mat');
-plot_TFR_topo(diff, lay, 'theta', [4 8], [stats_folder 'topo_mig-minus-ctrl_'])
-plot_TFR_topo(diff, lay, 'alpha', [9 12], [stats_folder 'topo_mig-minus-ctrl_'])
-plot_TFR_topo(diff, lay, 'beta', [13 25], [stats_folder 'topo_mig-minus-ctrl_'])
+plot_TFR_topo(diff_GA, lay, 'theta', [4 8], [stats_folder 'topo_mig-minus-ctrl_'])
+plot_TFR_topo(diff_GA, lay, 'alpha', [9 12], [stats_folder 'topo_mig-minus-ctrl_'])
+plot_TFR_topo(diff_GA, lay, 'beta', [13 25], [stats_folder 'topo_mig-minus-ctrl_'])
