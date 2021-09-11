@@ -1,4 +1,17 @@
-% SPECIFY the folder for this statistical analysis
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% stats_FREQ.m
+%
+% Author: Judy Zhu (github.com/JD-Zhu)
+%
+% Statistical analysis of frequency results (between-groups study design) 
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% = Settings =
+
+% PLEASE SPECIFY the folder for this statistical analysis
 stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\25vs12\';
 
 
@@ -78,6 +91,7 @@ export_fig(gcf, [stats_folder 'indi-chan-analysis.png']);
 
 %% Figure 2b
 freq_range = [9:12];
+freq_band = 'alpha';
 
 % for each channel, compute average power over the selected freq range
 N_chan = size(mig_indi.powspctrm, 2); % number of channels
@@ -102,7 +116,7 @@ freq.freq = 0; % we no longer have a frequency dimension, just fill with a dummy
 
 % plot topography based on the t-values
 load('lay_NeuroPrax32.mat');
-plot_TFR_topo(freq, lay, 'alpha', [], [stats_folder 'indi-chan-analysis_tvalues_'])
+plot_TFR_topo(freq, lay, freq_band, [], [stats_folder 'indi-chan-analysis_tvalues_'])
 
 
 %% plot the topography difference btwn two groups (like in Flavia's paper)

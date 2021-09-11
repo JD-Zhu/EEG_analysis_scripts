@@ -4,55 +4,54 @@
 %
 % Author: Judy Zhu (github.com/JD-Zhu)
 %
-% Grand average & statistical analysis of frequency results
+% Collate all subjects' results into a spreadsheet.
+% Compute grand average & produce plots.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 % = Settings =
 
-% Please specify correctly:
-%run_name = 'offlineHPF_LMref';
+% PLEASE SPECIFY:
+which_project = 'migraine'; % Options: 'SCI', 'migraine'
+subj_group = 'migraineurs'; % Options: 'migraineurs', 'controls'
 run_name = 'EC_LPF30';
-subj_group = 'controls'; %'migraineurs';
+%run_name = 'offlineHPF_LMref';
 
-
-%%
 % run the #define section
-%global ResultsFolder; 
-%common();
-
+%global ResultsFolder; common();
 ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\'];
 
-ResultsFolder_thisrun = [ResultsFolder run_name '\']; % where to read in the results for all subjects
+% can specify a subset of subjects to use,
+% or leave empty (to use all subjs in the folder)
+SubjectIDs = {'Subject_500', 'Subject_548'};
+%SubjectIDs = {};
+
+
+%% automatic setup
+ResultsFolder_thisrun = [ResultsFolder run_name '\']; % where to read in the result files for all subjects
 save_location = [ResultsFolder_thisrun 'GA_' subj_group '\']; % where to save the GA & figures
 mkdir(save_location);
+
+% if subject list is empty, then use all results files in the folder
+if isempty(SubjectIDs)
+    SubjectIDs = dir([ResultsFolder_thisrun 'Subject_*.mat']);
+    SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
+end
 
 allSubjects_freq = {};
 
 
-% PLEASE LOAD the SubjectIDs variable - the GA will be based on these subjs only:
-SubjectIDs = {};
-
-
 %% Read in each subject's result file & plot overall power, then collate results for all subjects into one Excel file
 
-%{
-temp = load([ResultsFolder_thisrun '552_S1_offline0.01HPF_noICA_carefulReject.mat']);
-freq1 = temp.freq;
-temp = load([ResultsFolder_thisrun '9009-test_offlineHPF_noICA_carefulReject.mat']);
-freq2 = temp.freq;
-temp = load([ResultsFolder_thisrun '9002_S1_EC.mat']);
-freq3 = temp.freq;
-%}
-
-%files = dir([ResultsFolder_thisrun '*_S1.mat']);
-%files = dir([ResultsFolder_thisrun 'Subject_*.mat']);
-
-% plot "overall power" for each subject,
+% plot "overall power" (i.e. avg of all sensors) for each subject,
 % putting all subjects in same plot (one line == one subject)
 figure; hold on;
-x_limits = [2 30];
+if strcmp(which_project, 'migraine')
+    x_limits = [2 30];
+elseif strcmp(which_project, 'SCI')
+    x_limits = [0 30];
+end
 
 % each cycle reads in one '.mat' file (i.e. one subject's freq results)
 for i = 1:length(SubjectIDs)
@@ -64,7 +63,7 @@ for i = 1:length(SubjectIDs)
     % add to cell array
     allSubjects_freq = [allSubjects_freq freq];
     
-    % also plot the "overall power" (i.e. avg of all sensors) for this subject
+    % plot the "overall power" for this subject
     plot(freq.freq, mean(freq.powspctrm));
     xlim(x_limits);
     xlabel('Frequency (Hz)');
@@ -143,12 +142,6 @@ for i = 1:29
 end
 %}
 
-
-% freq3 doesn't contain infraslow (used online filter 0.3Hz), so redo here
-%{
-[GA_freq] = ft_freqgrandaverage([], freq1, freq2);
-plot_TFR_topo(GA_freq, lay, 'infraslow', [0.03 0.06], save_location)
-%}
 
 
 %%
