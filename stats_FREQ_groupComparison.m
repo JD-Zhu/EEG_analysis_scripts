@@ -11,6 +11,12 @@
 
 % = Settings =
 
+% Run t-tests using equal variance (i.e. pooled) or unequal variance? (p-values obtained were similar)
+% 'unequal' is the most conservative approach
+% https://www.investopedia.com/terms/t/t-test.asp
+% https://statmagic.info/Content/Help-Content/two-sample-mean.html
+varType = 'unequal'; %'equal';
+
 % PLEASE SPECIFY the folder for this statistical analysis
 stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\25vs12\';
 
@@ -57,7 +63,7 @@ a = mean(mig(:,freq_range), 2); % avg over the selected freq range
 b = mean(ctrl(:,freq_range), 2); % avg over the selected freq range
 
 % this function conducts a two-sample t-test
-[h,p,ci,stats] = ttest2(a, b, 'Vartype','unequal'); % or should it be equal variance? (p-values are similar)
+[h,p,ci,stats] = ttest2(a, b, 'Vartype',varType); % or should it be equal variance? (p-values were similar)
 stats.tstat  % t-value
 p            % p-value
 
@@ -75,7 +81,7 @@ for i = 1:N_chan % loop through each channel
         a = mig_indi.powspctrm(:,i,j); % extract power for all migraineurs
         b = ctrl_indi.powspctrm(:,i,j); % extract power for all controls
         
-        [h,p,ci,stats] = ttest2(a, b, 'Vartype','unequal'); % or should it be equal variance?
+        [h,p,ci,stats] = ttest2(a, b, 'Vartype',varType);
         t_values(i,j) = stats.tstat; % store the t-value into the "chan x freq" matrix
     end
 end
@@ -105,7 +111,7 @@ for i = 1:N_chan % loop through each channel
     b = ctrl_indi.powspctrm(:,i,freq_range); % do the same for controls
     b = mean(b,3); 
     
-    [h,p,ci,stats] = ttest2(a, b, 'Vartype','unequal'); % or should it be equal variance?
+    [h,p,ci,stats] = ttest2(a, b, 'Vartype','varType'); % or should it be equal variance?
     t_values(i) = stats.tstat; % store the t-value into the array
 end
 

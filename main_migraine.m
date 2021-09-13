@@ -13,7 +13,7 @@
 common();
 
 % Please specify:
-subj_group = 'controls'; %'migraineurs'; %'controls';
+subj_group = 'migraineurs'; %'controls';
 
 DataFolder = ['Z:\Analysis\Judy\EpisodicMigraine\data\' subj_group '\']; % this directory should contain all the SubjectFolders
 ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\']; % all subjects' freq analysis results will be stored here

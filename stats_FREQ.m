@@ -24,8 +24,8 @@ ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\'];
 
 % can specify a subset of subjects to use,
 % or leave empty (to use all subjs in the folder)
-SubjectIDs = {'Subject_500', 'Subject_548'};
-%SubjectIDs = {};
+%SubjectIDs = {'Subject_583', 'Subject_673', 'Subject_680'};
+SubjectIDs = {};
 
 
 %% automatic setup
@@ -56,7 +56,7 @@ end
 % each cycle reads in one '.mat' file (i.e. one subject's freq results)
 for i = 1:length(SubjectIDs)
     %filename = [ResultsFolder_thisrun files(i).name];
-    filename = [ResultsFolder_thisrun cell2mat(SubjectIDs(i)) '.mat'];
+    filename = [ResultsFolder_thisrun cell2mat(SubjectIDs(i))];
 
     load(filename);
     
