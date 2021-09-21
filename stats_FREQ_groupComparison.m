@@ -68,7 +68,8 @@ stats.tstat  % t-value
 p            % p-value
 
 
-%% individual channel analysis: 12vs12 t-test at each freq for each channel
+%% individual channel analysis: 25vs12 t-test at each freq for each channel
+% (Figure 1a)
 
 N_chan = size(mig_indi.powspctrm, 2); % number of channels
 N_freq = size(mig_indi.powspctrm, 3); % number of freqs
@@ -104,6 +105,7 @@ N_chan = size(mig_indi.powspctrm, 2); % number of channels
 
 % initialise an array to store the t-value for each channel
 t_values = zeros(N_chan, 1);
+p_values = zeros(N_chan, 1);
 
 for i = 1:N_chan % loop through each channel
     a = mig_indi.powspctrm(:,i,freq_range); % extract power for all migraineurs (only for the selected freq range)
@@ -111,8 +113,9 @@ for i = 1:N_chan % loop through each channel
     b = ctrl_indi.powspctrm(:,i,freq_range); % do the same for controls
     b = mean(b,3); 
     
-    [h,p,ci,stats] = ttest2(a, b, 'Vartype','varType'); % or should it be equal variance?
+    [h,p,ci,stats] = ttest2(a, b, 'Vartype',varType); % or should it be equal variance?
     t_values(i) = stats.tstat; % store the t-value into the array
+    p_values(i) = p;
 end
 
 % create a dummy var for plotting
@@ -140,3 +143,88 @@ load('lay_NeuroPrax32.mat');
 plot_TFR_topo(diff_GA, lay, 'theta', [4 8], [stats_folder 'topo_mig-minus-ctrl_'])
 plot_TFR_topo(diff_GA, lay, 'alpha', [9 12], [stats_folder 'topo_mig-minus-ctrl_'])
 plot_TFR_topo(diff_GA, lay, 'beta', [13 25], [stats_folder 'topo_mig-minus-ctrl_'])
+
+
+%% Cluster-based statistical analysis
+% https://www.fieldtriptoolbox.org/tutorial/cluster_permutation_freq/
+% https://www.fieldtriptoolbox.org/workshop/madrid2019/tutorial_stats/#2-compute-between-participants-contrasts
+
+% load the data
+load([migraineurs_folder 'allSubjects_freq.mat']);
+mig = allSubjects_freq;
+load([controls_folder 'allSubjects_freq.mat']);
+ctrl = allSubjects_freq;
+
+load('lay_NeuroPrax32.mat');
+load('neighbours_NeuroPrax32.mat'); % obtained using 'trigangulation' method in ft_prepare_neighbour
+
+
+% Opt 1: find spatio-freq cluster:
+%foi = [1 30];
+%freq_band = 'spatio-freq';
+% Opt 2: find spatial cluster for a particular freq band:
+foi = [9 12];
+freq_band = 'alpha';
+
+cfg = [];
+cfg.channel = 'all';
+cfg.frequency = foi;
+cfg.avgoverfreq = 'yes'; % enable for Opt 2
+
+cfg.method = 'montecarlo';
+cfg.correctm = 'cluster'; %'no'; % it is common in MEG studies to run uncorrected at cfg.alpha = 0.001
+cfg.clusteralpha = 0.05; % threshold for selecting candidate samples to form clusters
+cfg.clusterstatistic = 'maxsum';
+%cfg.clusterthreshold = 'nonparametric_common';
+cfg.neighbours = neighbours;  % same as defined for the between-trials experiment
+cfg.minnbchan = 2; % minimum number of neighbourhood channels required to be significant 
+                   % in order to form a cluster 
+                   % (default: 0, ie. each single channel can be considered a cluster)
+
+cfg.alpha = 0.05; %0.001  % threshold for cluster-level statistics (any cluster with a p-value lower than this will be reported as sig - an entry of '1' in .mask field)
+cfg.numrandomization = 500; % Rule of thumb: use 500, and double this number if it turns out 
+    % that the p-value differs from the chosen alpha (e.g. 0.05) by less than 0.02
+    
+%{
+% within-subject design
+numSubjects = length(data.(eventnames_real{1})); % check how many subjects we are including
+within_design_1x2 = zeros(2,2*numSubjects);
+within_design_1x2(1,:) = repmat(1:numSubjects,1,2);
+within_design_1x2(2,1:numSubjects) = 1;
+within_design_1x2(2,numSubjects+1:2*numSubjects) = 2;
+
+within_design_1x3 = zeros(2, 3*numSubjects);
+within_design_1x3(1, :) = repmat(1:numSubjects, 1, 3);
+within_design_1x3(2, 1:numSubjects) = 1;
+within_design_1x3(2, numSubjects+1:2*numSubjects) = 2;
+within_design_1x3(2, 2*numSubjects+1:3*numSubjects) = 3;
+
+cfg.uvar  = 1; % row of design matrix that contains unit variable (in this case: subjects)
+cfg.ivar  = 2; % row of design matrix that contains independent variable (i.e. the conditions)
+%}
+
+% design matrix
+num_mig = length(mig);
+num_ctrl = length(ctrl);
+
+design = zeros(1, num_mig + num_ctrl);
+design(1, 1:num_mig) = 1;
+design(1, (num_mig+1):(num_mig + num_ctrl)) = 2;
+
+cfg.design = design;
+cfg.ivar   = 1;
+
+% Make sure we are using 2-tailed t-tests:
+cfg.statistic = 'indepsamplesT'; % t-test (i.e. for comparing 2 conds)
+cfg.tail = 0;
+cfg.clustertail = 0; % 2 tailed test
+cfg.correcttail = 'prob'; % correct for 2-tailedness
+
+% t-test: migraineurs vs controls
+[stat] = ft_freqstatistics(cfg, mig{:}, ctrl{:}); %allSubj_cue_ch_switchCost{:}, allSubj_cue_en_switchCost{:});
+
+save([stats_folder 'cluster_stat\minnbchan' mat2str(cfg.minnbchan) '_' freq_band '.mat'], 'stat');
+
+
+% Next: plot which channels are in the spatial cluster
+

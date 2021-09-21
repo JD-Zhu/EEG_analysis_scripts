@@ -14,7 +14,8 @@
 
 % PLEASE SPECIFY:
 which_project = 'migraine'; % Options: 'SCI', 'migraine'
-subj_group = 'migraineurs'; % Options: 'migraineurs', 'controls'
+
+subj_group = 'controls'; % Options: 'migraineurs', 'controls'
 run_name = 'EC_LPF30';
 %run_name = 'offlineHPF_LMref';
 
@@ -28,7 +29,7 @@ ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\'];
 SubjectIDs = {};
 
 
-%% automatic setup
+% automatic setup
 ResultsFolder_thisrun = [ResultsFolder run_name '\']; % where to read in the result files for all subjects
 save_location = [ResultsFolder_thisrun 'GA_' subj_group '\']; % where to save the GA & figures
 mkdir(save_location);
@@ -42,15 +43,17 @@ end
 allSubjects_freq = {};
 
 
-%% Read in each subject's result file & plot overall power, then collate results for all subjects into one Excel file
+% Read in each subject's result file & plot overall power, then collate results for all subjects into one Excel file
 
 % plot "overall power" (i.e. avg of all sensors) for each subject,
 % putting all subjects in same plot (one line == one subject)
 figure; hold on;
 if strcmp(which_project, 'migraine')
-    x_limits = [2 30];
+    x_limits = [2 30]; % for plotting (anything below 2Hz was affected by the HPF)
+    freq_field = 1:30; % for fixing up the freq field (for some reason the freq values are not whole numbers)
 elseif strcmp(which_project, 'SCI')
     x_limits = [0 30];
+    freq_field = 0:0.005:30;
 end
 
 % each cycle reads in one '.mat' file (i.e. one subject's freq results)
@@ -59,6 +62,8 @@ for i = 1:length(SubjectIDs)
     filename = [ResultsFolder_thisrun cell2mat(SubjectIDs(i))];
 
     load(filename);
+   
+    freq.freq = freq_field;  % do some fixing up
     
     % add to cell array
     allSubjects_freq = [allSubjects_freq freq];
@@ -72,10 +77,13 @@ end
 hold off;
 
 % save the plot
-export_fig(gcf, [save_location 'overall_power_' int2str(length(SubjectIDs)) 'subj.png']); % use this tool to save the figure exactly as shown on screen
+%export_fig(gcf, [save_location 'overall_power_' int2str(length(SubjectIDs)) 'subj.png']); % use this tool to save the figure exactly as shown on screen
+
+% save the var
+save([save_location 'allSubjects_freq.mat'], 'allSubjects_freq');
 
 
-% Export the indi-subject freq results to Excel sheet
+%% Export the indi-subject freq results to Excel sheet
 Excel_output_file = [save_location 'summary.xls'];
 if (exist(Excel_output_file, 'file') ~= 2)     
     for i = 1:length(SubjectIDs)
@@ -141,17 +149,3 @@ for i = 1:29
     high_freqs = high_freqs + 1;
 end
 %}
-
-
-
-%%
-
-%TODO% next step is stats - see Flavia paper, no need to do clusters
-        
-
-
-% If you want to find spatial cluster (following FT tutorial), 
-% need to check & make sure the channel layout is correct, 
-% otherwise the neighbours will be incorrect
-
-
