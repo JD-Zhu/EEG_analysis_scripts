@@ -7,10 +7,11 @@
 % @freq_range       e.g. [4 8]
 % @save_location    where to save the figures (optional).
 %                   if you don't want to save, just specify as ''
+% @comment          display date & other info?
 %
 % Author: Judy Zhu (github.com/JD-Zhu)
 %
-function plot_TFR_topo(freq, lay, freq_band, freq_range, save_location)
+function plot_TFR_topo(freq, lay, freq_band, freq_range, save_location, comment)
 
     cfg = [];
     cfg.xlim         = freq_range; % freq range to plot (NOTE this is diff from FT documentation, as we only have 2 dimensions in "freq", ie. not TFR)
@@ -18,6 +19,9 @@ function plot_TFR_topo(freq, lay, freq_band, freq_range, save_location)
     cfg.style        = 'straight'; % 'both';
     cfg.colorbar     = 'yes';
     cfg.comment      = 'xlim';
+    if ~comment
+        cfg.comment  = 'no';
+    end
     cfg.layout       = lay;
     figure; title(freq_band);
     ft_topoplotTFR(cfg, freq); 
