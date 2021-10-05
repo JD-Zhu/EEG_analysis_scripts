@@ -71,7 +71,7 @@ p            % p-value
 
 
 %% individual channel analysis: 25vs12 t-test at each freq for each channel
-% (Figure 2a)
+% (Figure 2a in Flavia paper)
 
 N_chan = size(mig_indi.powspctrm, 2); % number of channels
 N_freq = size(mig_indi.powspctrm, 3); % number of freqs
@@ -98,7 +98,7 @@ xlabel('Frequency (Hz)');
 export_fig(gcf, [stats_folder 'indi-chan-analysis\indi-chan-analysis.png']);
 
 
-%% Figure 2b
+%% Figure 2b in Flavia paper
 freq_range = [9:12];
 freq_band = 'alpha';
 
@@ -126,14 +126,14 @@ freq.powspctrm = t_values;
 freq.freq = 0; % we no longer have a frequency dimension, just fill with a dummy value
 
 % plot topography based on the t-values
-plot_TFR_topo(freq, lay, freq_band, [], [stats_folder 'indi-chan-analysis\tvalues_'], 0);
+plot_TFR_topo(freq, lay, freq_band, [], [stats_folder 'indi-chan-analysis\tvalues_']);
 
 
-%% plot the topography difference btwn two groups (like in Flavia's paper)
+%% plot the topography difference btwn two groups
 % e.g. subtract the topo for alpha (migraineurs minus controls)
 
 % NOTE: this plot is based on absolute power diff in the GA, 
-% whereas Flavia plotted the t-values
+% whereas Flavia plotted the t-values (see above - "Figure 2b")
 
 % calculate the difference GA
 diff_GA = mig_avg;

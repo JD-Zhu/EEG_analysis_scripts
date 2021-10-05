@@ -15,7 +15,7 @@
 % PLEASE SPECIFY:
 which_project = 'migraine'; % Options: 'SCI', 'migraine'
 
-subj_group = 'controls'; % Options: 'migraineurs', 'controls'
+subj_group = 'migraineurs'; % Options: 'migraineurs', 'controls'
 run_name = 'EC_LPF30';
 %run_name = 'offlineHPF_LMref';
 
@@ -25,8 +25,14 @@ ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\'];
 
 % can specify a subset of subjects to use,
 % or leave empty (to use all subjs in the folder)
-%SubjectIDs = {'Subject_583', 'Subject_673', 'Subject_680'};
-SubjectIDs = {};
+% Groups based on migraine phases:
+%SubjectIDs = {'Subject_500', 'Subject_548'}; % prodrome
+%SubjectIDs = {'Subject_583', 'Subject_673', 'Subject_680'}; % postdrome
+%SubjectIDs = {'Subject_661', 'Subject_664', 'Subject_671', 'Subject_677', 'Subject_681', 'Subject_696', 'Subject_800'}; % interictal
+% Groups based on migraine frequency:
+%SubjectIDs = {'Subject_677', 'Subject_681', 'Subject_696', 'Subject_800'}; % <1 day / month
+%SubjectIDs = {'Subject_583', 'Subject_661', 'Subject_671'}; % 1-2 days / month
+SubjectIDs = {'Subject_500', 'Subject_548', 'Subject_664', 'Subject_673', 'Subject_680'}; % >3 days / month
 
 
 % automatic setup
@@ -43,10 +49,10 @@ end
 allSubjects_freq = {};
 
 
-% Read in each subject's result file & plot overall power, then collate results for all subjects into one Excel file
+%% Read in each subject's result file & plot overall power (i.e. avg of all sensors), 
+% then collate results for all subjects into one Excel file
 
-% plot "overall power" (i.e. avg of all sensors) for each subject,
-% putting all subjects in same plot (one line == one subject)
+% set up the "overall power" plot (one line == one subject)
 figure; hold on;
 if strcmp(which_project, 'migraine')
     x_limits = [2 30]; % for plotting (anything below 2Hz was affected by the HPF)
@@ -59,7 +65,7 @@ end
 % each cycle reads in one '.mat' file (i.e. one subject's freq results)
 for i = 1:length(SubjectIDs)
     %filename = [ResultsFolder_thisrun files(i).name];
-    filename = [ResultsFolder_thisrun cell2mat(SubjectIDs(i))];
+    filename = [ResultsFolder_thisrun cell2mat(SubjectIDs(i)) '.mat'];
 
     load(filename);
    
@@ -77,7 +83,7 @@ end
 hold off;
 
 % save the plot
-%export_fig(gcf, [save_location 'overall_power_' int2str(length(SubjectIDs)) 'subj.png']); % use this tool to save the figure exactly as shown on screen
+export_fig(gcf, [save_location 'overall_power_' int2str(length(SubjectIDs)) 'subj.png']); % use this tool to save the figure exactly as shown on screen
 
 % save the var
 save([save_location 'allSubjects_freq.mat'], 'allSubjects_freq');
@@ -88,7 +94,7 @@ Excel_output_file = [save_location 'summary.xls'];
 if (exist(Excel_output_file, 'file') ~= 2)     
     for i = 1:length(SubjectIDs)
         % write the heading (SubjectID + channel labels)
-        filename = [ResultsFolder_thisrun cell2mat(SubjectIDs(i))];
+        filename = [ResultsFolder_thisrun cell2mat(SubjectIDs(i)) '.mat'];
         SubjectID = ['ID ' filename(end-6:end-4)];
         writecell([SubjectID 'Freq' allSubjects_freq{i}.label'], Excel_output_file, 'WriteMode','append');
         
