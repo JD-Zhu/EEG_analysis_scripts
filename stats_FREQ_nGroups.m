@@ -43,6 +43,7 @@ N_freq = size(GA_freq_indi.powspctrm, 3); % number of freqs
 
 % initialise "chan x freq" matrix to store f-values
 f_values = zeros(N_chan, N_freq);
+p_values = zeros(N_chan, N_freq);
 
 for i = 1:N_chan % loop through each channel
     for j = 1:N_freq % loop through each freq
@@ -56,18 +57,20 @@ for i = 1:N_chan % loop through each channel
         for g = 1:length(groups)
             load([stats_folder groups{g} '\GA_individuals.mat']);
             data = GA_freq_indi.powspctrm(:,i,j);
-            data_for_anova = vertcat(data_for_anova, data); % append the power values for subjects belonging to this group
+            data_for_anova = vertcat(data_for_anova, data); % append the data for subjects belonging to this group
             % also append this group's label accordingly (same number of times as how many subjects were appended)
             for count = 1:length(data)
                 grouping_var = [grouping_var; groups{g}]; 
             end
         end
         
-        [p,tbl,stats] = anova1(data_for_anova, grouping_var);
-        %f_values(i,j) = stats.tstat; % store the f-value into the "chan x freq" matrix
+        [p,tbl,stats] = anova1(data_for_anova, grouping_var, 'off');
+        %t_values(i,j) = stats.tstat; % store the f-value into the "chan x freq" matrix
+        f_values(i,j) = cell2mat(tbl(2,5));
+        p_values(i,j) = cell2mat(tbl(2,6));
     end
 end
-%%
+
 figure; title('f-values');
 imagesc(f_values)
 colorbar
