@@ -1,6 +1,14 @@
-%%===============================================================%%
-%% Comparison across 3 groups (e.g. migraine phases / frequency) %%
-%%===============================================================%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% stats_FREQ_nGroups.m
+%
+% Author: Judy Zhu (github.com/JD-Zhu)
+%
+% Statistical analysis of frequency results:
+% Comparison across 3 groups (e.g. migraine phases / frequency of attacks)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 % PLEASE SPECIFY the folder for this statistical analysis
 stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\migraine_frequency\';
@@ -71,10 +79,20 @@ for i = 1:N_chan % loop through each channel
     end
 end
 
-figure; title('f-values');
+save([stats_folder 'indi-chan-analysis\stats--chan_x_freq.mat'], 'f_values', 'p_values');
+
+%%
+figure;
 imagesc(f_values)
 colorbar
 ylabel('EEG channel');
 xlabel('Frequency (Hz)');
+export_fig(gcf, [stats_folder 'indi-chan-analysis\indi-chan-analysis_F-values.png']);
 
-export_fig(gcf, [stats_folder 'indi-chan-analysis\indi-chan-analysis.png']);
+figure;
+imagesc(p_values, [0 0.05]) % only plot p-values up to 0.05
+colorbar
+ylabel('EEG channel');
+xlabel('Frequency (Hz)');
+export_fig(gcf, [stats_folder 'indi-chan-analysis\indi-chan-analysis_p-values.png']);
+

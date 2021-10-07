@@ -1,10 +1,14 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% stats_FREQ.m
+% stats_FREQ_2groupsComparison.m
 %
 % Author: Judy Zhu (github.com/JD-Zhu)
 %
-% Statistical analysis of frequency results (between-groups study design) 
+% Statistical analysis of frequency results:
+% Comparison between 2 groups (e.g. patients vs controls)
+%
+% TODO: can merge this script into stats_FREQ_nGroups.m
+% (note - 2 groups is a special case, need to use t-test rather than F-test)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
