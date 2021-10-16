@@ -11,19 +11,23 @@
 
 
 % PLEASE SPECIFY the folder for this statistical analysis
-stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\migraine_frequency\';
+stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\migraine_phases\';
+%stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\migraine_frequency\';
 
 % PLEASE SPECIFY the subject groups for comparison
-groups = {'GA_lessThan1day', 'GA_1-2days', 'GA_moreThan3days'};
-% you need to have these GA folders ready inside the stats_folder
+groups = {'GA_prodrome', 'GA_postdrome', 'GA_interictal'};
+%groups = {'GA_lessThan1day', 'GA_1-2days', 'GA_moreThan3days'};
+% note: you need to have these GA folders ready inside the stats_folder
+
+% Also set up the figure legends (MAKE SURE the order here is same as in the "groups" variable above)
+figure_legends = {'Prodrome', 'Postdrome', 'Interictal'};
+%figure_legends = {'< 1 day', '1-2 days', '> 3 days'};
 
 load('lay_NeuroPrax32.mat');
 
 
 %% plot overall power (one line == one group)
 
-% set up for the figure
-legends = {'< 1 day', '1-2 days', '> 3 days'}; % MAKE SURE the order here is same as in the "groups" variable above
 x_limits = [2 30];
 
 % plot the GA for each group
@@ -36,7 +40,7 @@ end
 xlim(x_limits);
 xlabel('Frequency (Hz)');
 ylabel('Absolute power (uV^2)');
-legend(legends);
+legend(figure_legends);
 hold off;
 
 export_fig(gcf, [stats_folder 'overall_power_for_each_group.png']);
