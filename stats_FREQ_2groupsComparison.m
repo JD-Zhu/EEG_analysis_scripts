@@ -8,7 +8,8 @@
 % Comparison between 2 groups (e.g. patients vs controls)
 %
 % TODO: can merge this script into stats_FREQ_nGroups.m
-% (note - 2 groups is a special case, need to use t-test rather than F-test)
+% (note - 2 groups is a special case, should use t-test rather than F-test;
+% but can try & see if the anova1 fn can actually handle 2 groups)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -60,7 +61,7 @@ export_fig(gcf, [stats_folder 'overall_power_mig-vs-ctrl.png']);
 
 
 %% run t-test (mig vs ctrl) on a particular freq range
-freq_range = [9:12];
+freq_range = 9:12;
 
 mig = squeeze(mean(mig_indi.powspctrm, 2)); % avg over all channels
 ctrl = squeeze(mean(ctrl_indi.powspctrm, 2)); % avg over all channels
@@ -74,8 +75,8 @@ stats.tstat  % t-value
 p            % p-value
 
 
-%% individual channel analysis: 25vs12 t-test at each freq for each channel
-% (Figure 2a in Flavia paper)
+%% individual channel analysis: t-test at each channel for each freq (27 x 30 = 810 comparisons)
+% (see Figure 2a in Flavia paper)
 
 N_chan = size(mig_indi.powspctrm, 2); % number of channels
 N_freq = size(mig_indi.powspctrm, 3); % number of freqs
@@ -102,12 +103,14 @@ xlabel('Frequency (Hz)');
 export_fig(gcf, [stats_folder 'indi-chan-analysis\indi-chan-analysis.png']);
 
 
-%% Figure 2b in Flavia paper
-freq_range = [9:12];
+%% t-test at each channel for each freq band (27 x 3 = 81 comparisons)
+% (see Figure 2b in Flavia paper)
+
+% need to specify each freq band manually for now
+freq_range = 9:12;
 freq_band = 'alpha';
 
-% for each channel, compute average power over the selected freq range
-N_chan = size(mig_indi.powspctrm, 2); % number of channels
+N_chan = size(mig_indi.powspctrm, 2); % get the number of channels
 
 % initialise an array to store the t-value for each channel
 t_values = zeros(N_chan, 1);
@@ -115,7 +118,7 @@ p_values = zeros(N_chan, 1);
 
 for i = 1:N_chan % loop through each channel
     a = mig_indi.powspctrm(:,i,freq_range); % extract power for all migraineurs (only for the selected freq range)
-    a = mean(a,3); % take the mean over that freq range
+    a = mean(a,3); % take the avg over that freq range
     b = ctrl_indi.powspctrm(:,i,freq_range); % do the same for controls
     b = mean(b,3); 
     
