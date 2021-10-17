@@ -69,7 +69,8 @@ for i = 1:length(SubjectIDs)
 
     load(filename);
    
-    freq.freq = freq_field;  % do some fixing up
+    freq.freq = freq_field;  % do some fixing up (coz the "freq" field created by ft_freqanalysis 
+    % does not contain whole numbers & vary across subjects, causing issues for the plot)
     
     % add to cell array
     allSubjects_freq = [allSubjects_freq freq];
@@ -79,6 +80,12 @@ for i = 1:length(SubjectIDs)
     xlim(x_limits);
     xlabel('Frequency (Hz)');
     ylabel('Absolute power (uV^2)');
+    
+    % plot the "overall power" for this subject (log transformed)
+    %plot(freq.freq, mean(log(freq.powspctrm)));
+    %xlim(x_limits);
+    %xlabel('Frequency (Hz)');
+    %ylabel('Power (log[uV^2]');
 end
 hold off;
 

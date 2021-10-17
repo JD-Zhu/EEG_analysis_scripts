@@ -17,6 +17,7 @@ subj_group = 'migraineurs'; %'controls';
 
 DataFolder = ['Z:\Analysis\Judy\EpisodicMigraine\data\' subj_group '\']; % this directory should contain all the SubjectFolders
 ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\']; % all subjects' freq analysis results will be stored here
+ResultsFolder_conn = ['Z:\Analysis\Judy\EpisodicMigraine\results_conn\' subj_group '\']; % all subjects' connectivity results will be stored here
     
 % find all subject folders containing raw EEG recordings
 SubjectIDs = dir([DataFolder 'Subject*']);
@@ -64,6 +65,8 @@ if isempty(temp_name)
 end
 ResultsFolder_thisrun = [ResultsFolder temp_name '\\'];
 mkdir(ResultsFolder_thisrun);
+ResultsFolder_conn_thisrun = [ResultsFolder_conn temp_name '\\'];
+mkdir(ResultsFolder_conn_thisrun);
 
 % > name of confile in the SubjectFolder (can use wildcards)
 confile_name = '*\*.edf';
@@ -96,7 +99,8 @@ CHANNEL_REPAIR = true; % interpolate rejected channels?
 % set filenames for saving the output from each stage (so that we don't have to rerun the whole thing from beginning every time)
 S1_output_filename = ['S1_preprocessed_data' file_suffix '.mat']; % Stage 1 output (stored inside each Subject folder)
 %S2_output_filename = 'S2_after_visual_rejection.mat'; % Stage 2 output (stored inside each Subject folder)
-S3_output_filename = [file_suffix '.mat']; % Final output (stored in ResultsFolder for all subjects)
+S3_output_filename = [file_suffix '.mat']; % Final output for freq analysis (stored in ResultsFolder for all subjects)
+S4_output_filename = [file_suffix '.mat']; % Final output for connectivity analysis (stored in ResultsFolder_conn for all subjects)
 
 
 % load our custom-made layout & neighbours
@@ -607,35 +611,61 @@ for i = 1:length(SubjectIDs)
         load(S3_output_file);
     end
 end
-%}
 
 
-%% Plot "overall power" (i.e. avg'd across sensors) for each subject
-% (now moved into stats_FREQ.m)
-%{
-figure; hold on; % put all subjects in same plot (one line == one subject)
-x_limits = [2 30];
-
-for i = 1:length(SubjectIDs)    
+%% Stage 4: connectivity analysis
+%
+for i = 1:length(SubjectIDs)
+    
     SubjectID = cell2mat(SubjectIDs(i));
     SubjectFolder = [DataFolder SubjectID '\\'];
     
     output_path = [SubjectFolder output_name];
-    S3_output_file = [ResultsFolder_thisrun SubjectID S3_output_filename];
-    
-    load(S3_output_file);
-    
-    % plot avg of all channels
-    plot(freq.freq, mean(freq.powspctrm));
-    xlim(x_limits);
-    xlabel('Frequency (Hz)');
-    ylabel('Absolute power (uV^2)');
-    
-    % plot avg of all channels (log transformed)
-    %plot(freq.freq, mean(log(freq.powspctrm)));
-    %xlim(x_limits);
-    %xlabel('Frequency (Hz)');
-    %ylabel('Power (log[uV^2]');
+    S4_output_file = [ResultsFolder_conn_thisrun SubjectID S4_output_filename];
+
+    % if haven't already processed this stage before, do it now & save a copy
+    if (exist(S4_output_file, 'file') ~= 2)
+
+        load([output_path S1_output_filename]);
+
+        % Coherence
+        % https://www.fieldtriptoolbox.org/tutorial/connectivity/#non-parametric-computation-of-the-cross-spectral-density-matrix
+        cfg           = [];
+        cfg.method    = 'mtmfft';
+        cfg.taper     = 'dpss';
+        cfg.output    = 'fourier';
+        cfg.tapsmofrq = 2; % frequency smoothing of 2Hz
+        cfg.foi       = 1:1:30; 
+        %cfg.pad       = 'nextpow2'; % for more efficient FFT computation (but sometimes worse)
+        freq          = ft_freqanalysis(cfg, all_blocks);
+        
+        cfg           = [];
+        cfg.method    = 'coh';
+        coh           = ft_connectivityanalysis(cfg, freq);
+        %cohm          = ft_connectivityanalysis(cfg, mfreq);
+        
+        cfg           = [];
+        cfg.parameter = 'cohspctrm';
+        cfg.xlim      = [2 30];
+        cfg.zlim      = [0 1];
+        ft_connectivityplot(cfg, coh);
+
+        
+        % where to save the figures
+        save_location = [SubjectFolder 'Figures' run_name '\\connectivity\\'];
+        mkdir(save_location);
+        % add prefix to filename if needed
+        if ~isempty(file_suffix)
+            save_location = [save_location file_suffix(2:end) '_'];
+        end
+
+        set(gcf, 'Position', get(0, 'Screensize')); % make the figure full-screen
+        export_fig(gcf, [save_location 'coherence.png']); % use this tool to save the figure exactly as shown on screen
+        
+        
+        % SAVE all relevant variables from the workspace
+        save(S4_output_file, 'SubjectFolder', 'run_name', 'freq', 'coh', '-v7.3');       
+    else
+        load(S4_output_file);
+    end
 end
-hold off;
-%}
