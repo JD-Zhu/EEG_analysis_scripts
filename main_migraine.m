@@ -565,6 +565,14 @@ for i = 1:length(SubjectIDs)
         %load([output_path S2_output_filename]);
         load([output_path S1_output_filename]);
         
+        % where to save the figures
+        save_location = [SubjectFolder 'Figures' run_name '\\'];
+        mkdir(save_location);
+        % add prefix to filename if needed
+        if ~isempty(file_suffix)
+            save_location = [save_location file_suffix(2:end) '_'];
+        end
+        
         
         %Q: Should we cut here or not? cutting seems to promote the alpha 
         % band power a lot more (is this more normal or less normal?)
@@ -589,16 +597,8 @@ for i = 1:length(SubjectIDs)
         cfg.taper   = 'boxcar';
         cfg.foi     = 1:1:30; % 1 / cfg1.length = 0.25 (the longer the segments, the more reso we can have here)
                                   % so for a reso of 0.005Hz, we need at least 1 segment with a length of 1 / 0.005 = 200 seconds
-        freq         = ft_freqanalysis(cfg, all_blocks);
+        freq        = ft_freqanalysis(cfg, all_blocks);
 
-        
-        % where to save the figures
-        save_location = [SubjectFolder 'Figures' run_name '\\'];
-        mkdir(save_location);
-        % add prefix to filename if needed
-        if ~isempty(file_suffix)
-            save_location = [save_location file_suffix(2:end) '_'];
-        end
         
         % this fn takes care of all the plotting 
         % (power spectrum & topo for each freq band)
@@ -627,8 +627,17 @@ for i = 1:length(SubjectIDs)
     if (exist(S4_output_file, 'file') ~= 2)
 
         load([output_path S1_output_filename]);
+ 
+        % where to save the figures
+        save_location = [SubjectFolder 'Figures' run_name '\\connectivity\\'];
+        mkdir(save_location);
+        % add prefix to filename if needed
+        if ~isempty(file_suffix)
+            save_location = [save_location file_suffix(2:end) '_'];
+        end
 
-        % Coherence
+        
+        % (1) Coherence
         % https://www.fieldtriptoolbox.org/tutorial/connectivity/#non-parametric-computation-of-the-cross-spectral-density-matrix
         cfg           = [];
         cfg.method    = 'mtmfft';
@@ -646,21 +655,46 @@ for i = 1:length(SubjectIDs)
         
         cfg           = [];
         cfg.parameter = 'cohspctrm';
-        cfg.xlim      = [2 30];
+        cfg.xlim      = [2 30]; % we are interested in 2-30Hz (everything else was filtered out)
         cfg.zlim      = [0 1];
         ft_connectivityplot(cfg, coh);
 
-        
-        % where to save the figures
-        save_location = [SubjectFolder 'Figures' run_name '\\connectivity\\'];
-        mkdir(save_location);
-        % add prefix to filename if needed
-        if ~isempty(file_suffix)
-            save_location = [save_location file_suffix(2:end) '_'];
-        end
-
         set(gcf, 'Position', get(0, 'Screensize')); % make the figure full-screen
         export_fig(gcf, [save_location 'coherence.png']); % use this tool to save the figure exactly as shown on screen
+        
+        
+        % (2) Granger causality (directional connectivity)
+        % https://www.fieldtriptoolbox.org/tutorial/connectivity/#computation-of-the-multivariate-autoregressive-model
+        
+        % Only works if data are continuous (or epochs of same length?),
+        % so any subjects with manually marked bad sections need to be concatenated first
+        % Tried running on subject 661 - see figure in its connectivity folder
+        %{
+        % compute the multivariate autoregressive model
+        cfg         = [];
+        cfg.order   = 2; %5;
+        cfg.toolbox = 'biosig'; % 'bsmart' toolbox didn't work
+        mdata       = ft_mvaranalysis(cfg, all_blocks);
+        
+        % compute the spectral transfer function
+        cfg        = [];
+        cfg.method = 'mvar';
+        mfreq      = ft_freqanalysis(cfg, mdata);
+        
+        % compute & plot the granger causality spectrum
+        cfg           = [];
+        cfg.method    = 'granger';
+        granger       = ft_connectivityanalysis(cfg, mfreq);
+
+        cfg           = [];
+        cfg.parameter = 'grangerspctrm';
+        cfg.xlim      = [2 30]; % we are interested in 2-30Hz (everything else was filtered out)
+        %cfg.zlim      = [0 1];
+        ft_connectivityplot(cfg, granger);
+
+        set(gcf, 'Position', get(0, 'Screensize')); % make the figure full-screen
+        export_fig(gcf, [save_location 'granger.png']); % use this tool to save the figure exactly as shown on screen
+        %}
         
         
         % SAVE all relevant variables from the workspace
