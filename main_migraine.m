@@ -15,9 +15,10 @@ common();
 % Please specify:
 subj_group = 'migraineurs'; %'controls';
 
-DataFolder = ['Z:\Analysis\Judy\EpisodicMigraine\data\' subj_group '\']; % this directory should contain all the SubjectFolders
-ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\']; % all subjects' freq analysis results will be stored here
-ResultsFolder_conn = ['Z:\Analysis\Judy\EpisodicMigraine\results_conn\' subj_group '\']; % all subjects' connectivity results will be stored here
+ProjectFolder = 'Z:\Analysis\Judy\EpisodicMigraine\';
+DataFolder = [ProjectFolder 'data\' subj_group '\']; % this directory should contain all the SubjectFolders
+ResultsFolder = [ProjectFolder 'results\' subj_group '\']; % all subjects' freq analysis results will be stored here
+ResultsFolder_conn = [ProjectFolder 'results_conn\' subj_group '\']; % all subjects' connectivity results will be stored here
     
 % find all subject folders containing raw EEG recordings
 SubjectIDs = dir([DataFolder 'Subject*']);
@@ -657,7 +658,7 @@ for i = 1:length(SubjectIDs)
         cfg.parameter = 'cohspctrm';
         cfg.xlim      = [2 30]; % we are interested in 2-30Hz (everything else was filtered out)
         cfg.zlim      = [0 1];
-        ft_connectivityplot(cfg, coh);
+        ft_connectivityplot(cfg, coh); %, cohm);
 
         set(gcf, 'Position', get(0, 'Screensize')); % make the figure full-screen
         export_fig(gcf, [save_location 'coherence.png']); % use this tool to save the figure exactly as shown on screen
