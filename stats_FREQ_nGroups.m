@@ -46,7 +46,13 @@ hold off;
 export_fig(gcf, [stats_folder 'overall_power_for_each_group.png']);
 
 
-%% individual channel analysis: ANOVA at each channel for each freq (27 x 30 = 810 comparisons)
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ===== Individual channel analysis ===== %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%% ANOVA at each channel & each freq (27 x 30 = 810 comparisons)
 % (see Figure 2a in Flavia paper)
 
 load([stats_folder groups{1} '\GA_individuals.mat']); % load one group as an example
