@@ -23,7 +23,7 @@
 varType = 'unequal'; %'equal';
 
 % PLEASE SPECIFY the folder for this statistical analysis
-stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\25vs12\';
+stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\25vs12_conn\';
 
 
 % location of freq results for each group:
@@ -75,7 +75,13 @@ stats.tstat  % t-value
 p            % p-value
 
 
-%% individual channel analysis: t-test at each channel for each freq (27 x 30 = 810 comparisons)
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ===== Individual channel analysis ===== %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%% t-test at each channel & each freq (27 x 30 = 810 comparisons)
 % (see Figure 2a in Flavia paper)
 
 N_chan = size(mig_indi.powspctrm, 2); % number of channels
@@ -262,3 +268,57 @@ cfg.colorbar = 'yes'; % shows the scaling
 ft_clusterplot(cfg, stat);
 
 %export_fig(gcf, [stats_folder 'indi-chan-analysis\cluster_stat\minnbchan2_' freq_band '.png']);
+
+
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%
+% ===== Connectivity ===== %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% for some reason mig #2 data is messed up, so remove for now
+mig_indi.cohspctrm(2,:,:,:) = [];
+
+%{
+The cohspctrm is a 4D matrix, e.g. for mig_indi, it will be
+12x27x27x30  (subj_chan_chan_freq)
+    
+Qs: 
+1. does it make sense to avg the coh values across a freq band, like what 
+I did below? (there are no other alternatives atm)
+2. the coh values are percentages / scores between 0 ~ 1, is it appropriate
+to run t-test on such data?
+%}
+
+
+%% Compare coherence btwn mig & ctrl (t-test for each pair of channels: 27 x 27)
+
+% need to specify each freq band manually
+freq_range = 9:12;
+freq_band = 'alpha';
+
+
+N_chan = size(mig_indi.cohspctrm, 2); % number of channels
+
+% initialise "chan x chan" matrix to store t-values
+t_values = zeros(N_chan, N_chan);
+
+for i = 1:N_chan % loop through each "from" channel
+    for j = 1:N_chan % loop through each "to" channel
+        a = mig_indi.cohspctrm(:,i,j, freq_range); % extract coh values for all migraineurs
+        a = mean(a, 4); % avg over the selected freq range
+        b = ctrl_indi.cohspctrm(:,i,j, freq_range); % extract coh values for all controls
+        b = mean(b, 4); % avg over the selected freq range
+                
+        [h,p,ci,stats] = ttest2(a, b, 'Vartype',varType);
+        t_values(i,j) = stats.tstat; % store the t-value into the "chan x chan" matrix
+    end
+end
+
+figure; title('t-values (migraineurs > controls)');
+imagesc(t_values)
+colorbar
+ylabel('EEG channel');
+xlabel('EEG channel');
+
+export_fig(gcf, [stats_folder 'tvalues_' freq_band '.png']);

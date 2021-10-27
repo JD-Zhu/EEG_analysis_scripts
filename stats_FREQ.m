@@ -15,7 +15,7 @@
 % PLEASE SPECIFY:
 which_project = 'migraine'; % Options: 'SCI', 'migraine'
 
-subj_group = 'controls'; % Options: 'migraineurs', 'controls'
+subj_group = 'migraineurs'; % Options: 'migraineurs', 'controls'
 run_name = 'EC_LPF30';
 %run_name = 'offlineHPF_LMref';
 
@@ -180,10 +180,34 @@ if (exist(GA_output_file, 'file') ~= 2)
 end
 
 
-%% GA Plots (power spectrum & topo for each freq band)
+%% GA Plots
 
-% if we are working with conn results, skip this step
-if ~is_conn
+if is_conn % for connectivity analysis
+    
+    cfg           = [];
+    cfg.parameter = 'cohspctrm';
+    cfg.xlim      = [2 30]; % we are interested in 2-30Hz (everything else was filtered out)
+    cfg.zlim      = [0 1];
+    ft_connectivityplot(cfg, GA_freq);
+
+    set(gcf, 'Position', get(0, 'Screensize')); % make the figure full-screen
+    export_fig(gcf, [save_location 'GA_coherence.png']); % use this tool to save the figure exactly as shown on screen
+
+    % GA connectivity for each freq band
+    figure;
+    a = mean(GA_freq.cohspctrm(:,:, [9:12]), 3); % avg over alpha band
+    imagesc(a); colorbar; ylabel('EEG channel'); xlabel('EEG channel');
+    export_fig(gcf, [save_location 'alpha.png']);
+
+    a = mean(GA_freq.cohspctrm(:,:, [13:25]), 3); % avg over beta band
+    imagesc(a); colorbar; ylabel('EEG channel'); xlabel('EEG channel');
+    export_fig(gcf, [save_location 'beta.png']);
+
+    a = mean(GA_freq.cohspctrm(:,:, [4:8]), 3); % avg over theta band
+    imagesc(a); colorbar; ylabel('EEG channel'); xlabel('EEG channel');
+    export_fig(gcf, [save_location 'theta.png']);
+    
+else % for standard freq analysis (GA power spectrum & topo for each freq band)
     
     %load('lay_AntNeuro64.mat');
     %plot_TFR(GA_freq, lay, save_location, [1 30], true); % include topoplot for infra-slow
