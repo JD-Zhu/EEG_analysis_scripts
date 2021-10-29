@@ -275,33 +275,40 @@ ft_clusterplot(cfg, stat);
 % ===== Connectivity ===== %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-% for some reason mig #2 data is messed up, so remove for now
-mig_indi.cohspctrm(2,:,:,:) = [];
-
 %{
-The cohspctrm is a 4D matrix, e.g. for mig_indi, it will be
+The cohspctrm is a 4D matrix, e.g. for mig_indi, it is
 12x27x27x30  (subj_chan_chan_freq)
     
 Qs: 
 1. does it make sense to avg the coh values across a freq band, like what 
 I did below? (there are no other alternatives atm)
+L: yes.
+
 2. the coh values are percentages / scores between 0 ~ 1, is it appropriate
-to run t-test on such data?
+to run t-tests on such data?
+L: yes if the values are normally distributed.
 %}
 
 
 %% Compare coherence btwn mig & ctrl (t-test for each pair of channels: 27 x 27)
+% the actual number of tests (i.e. non-repeated channel pairs) is 1 + 2 + ... + 26 = 351 comparisons
 
 % need to specify each freq band manually
-freq_range = 9:12;
-freq_band = 'alpha';
+freq_range = 4:8;
+freq_band = 'theta';
+
+
+% for some reason mig #2 data is messed up, so remove for now
+mig_indi.cohspctrm(2,:,:,:) = [];
 
 
 N_chan = size(mig_indi.cohspctrm, 2); % number of channels
 
+c = []; % for normality check (see below)
+
 % initialise "chan x chan" matrix to store t-values
 t_values = zeros(N_chan, N_chan);
+p_values = zeros(N_chan, N_chan);
 
 for i = 1:N_chan % loop through each "from" channel
     for j = 1:N_chan % loop through each "to" channel
@@ -309,16 +316,47 @@ for i = 1:N_chan % loop through each "from" channel
         a = mean(a, 4); % avg over the selected freq range
         b = ctrl_indi.cohspctrm(:,i,j, freq_range); % extract coh values for all controls
         b = mean(b, 4); % avg over the selected freq range
+        
+        % check if data are normally distributed (an assumption of the t-test)
+        if (i < j) % only check non-repeated channel pairs (i.e. 351 pairs)
+            % use Anderson-Darling test for normality: 0 = normally distributed; 1 = not normally distributed
+            c = [c adtest([a; b])]; % opt 1: test normality on the data for each channel pair, and collect results into an array
+            %c = [c; a; b]; % opt 2: put all data together, you can then run adtest(c) afterwards
+        end
                 
         [h,p,ci,stats] = ttest2(a, b, 'Vartype',varType);
         t_values(i,j) = stats.tstat; % store the t-value into the "chan x chan" matrix
+        
+        
+        % if not normally distributed, try non-parametric alternatives of t-test:
+        % https://www.statisticshowto.com/probability-and-statistics/non-normal-distributions/
+        
+        % (1) Wilcoxon rank sum test / Mann-Whitney U-test (is this only for paired samples??)
+        [p,h,stats] = ranksum(a, b); %, 'method','approximate'); 
+        % (2) Kruskal-Wallis test (replacement for one-way ANOVA)
+        grouping_var = [repmat({'pt'}, [length(a),1]); repmat({'ctrl'}, [length(b),1])];
+        [p,tbl,stats] = kruskalwallis([a; b], grouping_var, 'off');
+        
+        p_values(i,j) = p; % store the t-value into the "chan x chan" matrix
     end
 end
 
+length(find(c)) % out of 351 possible channel pairs, how many have non-normally distributed data
+%adtest(c)
+
+%%
 figure; title('t-values (migraineurs > controls)');
 imagesc(t_values)
 colorbar
 ylabel('EEG channel');
 xlabel('EEG channel');
-
 export_fig(gcf, [stats_folder 'tvalues_' freq_band '.png']);
+
+p_values(isnan(p_values)) = 1; % replace all NaNs first, so they don't show up as sig p-values in the plot
+figure;
+imagesc(p_values, [0 0.05]) % only plot p-values up to 0.05
+colorbar
+ylabel('EEG channel');
+xlabel('EEG channel');
+%export_fig(gcf, [stats_folder 'p-values_MannWhitneyUtest_' freq_band '.png']);
+export_fig(gcf, [stats_folder 'p-values_kruskalwallis_' freq_band '.png']);
