@@ -638,6 +638,16 @@ for i = 1:length(SubjectIDs)
         end
 
         
+        %TODO% Apply surface laplacian to deal with volumn conduction issue?
+        % https://www.youtube.com/watch?v=CodQ5-pmXdQ
+        % https://www.fieldtriptoolbox.org/reference/ft_scalpcurrentdensity/
+        cfg = [];
+        cfg.method = 'finite'; % finite-difference method for the surface Laplacian on a triangulated sphere
+        cfg.elec = elec;
+        %cfg.feedback = string, 'no', 'text', 'textbar', 'gui' (default = 'text')
+        [all_blocks] = ft_scalpcurrentdensity(cfg, all_blocks);
+        
+        
         % (1) Coherence
         % https://www.fieldtriptoolbox.org/tutorial/connectivity/#non-parametric-computation-of-the-cross-spectral-density-matrix
         cfg           = [];

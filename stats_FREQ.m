@@ -125,6 +125,7 @@ save([save_location 'allSubjects_freq.mat'], 'allSubjects_freq');
 %% Export the indi-subject freq results to Excel sheet
 
 % if we are working with conn results, skip this step
+% coz the 3D coherence matrix (chan x chan x freq) is difficult to export properly
 if ~is_conn
     Excel_output_file = [save_location 'summary.xls'];
     if (exist(Excel_output_file, 'file') ~= 2)     
@@ -184,6 +185,8 @@ end
 
 if is_conn % for connectivity analysis
     
+    % GA coherence
+    figure;
     cfg           = [];
     cfg.parameter = 'cohspctrm';
     cfg.xlim      = [2 30]; % we are interested in 2-30Hz (everything else was filtered out)
