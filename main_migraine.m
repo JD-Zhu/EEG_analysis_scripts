@@ -50,7 +50,7 @@ end
 % offline rereferencing using "average reference" or "linked mastoid"?
 REREF = 'AR'; % we don't have M1 M2 for these data, so just use avg ref
 
-% > create a name for this run (this will create a separate output & Figures folder)
+% create a name for this run (this will create a separate output & Figures folder)
 run_name = '_EC_LPF30'; % '_EO';
 file_suffix = ''; % '_minReject': only reject a noisy chan if it's utterly crazy - keep where possible (note: all flat channels must still be rejected)
 
@@ -59,20 +59,29 @@ if strcmp(REREF, 'LM')
 end
 output_name = ['output' run_name '\\']; % location to save intermediate output files inside each SubjectFolder
 
+% For connectivity analysis ONLY - apply surface Laplacian to deal with volumn conduction issue?
+APPLY_SL = true;
+            
 % location to save the results for all subjects
 temp_name = run_name(2:end);
 if isempty(temp_name)
     temp_name = 'full';
 end
+
 ResultsFolder_thisrun = [ResultsFolder temp_name '\\'];
 mkdir(ResultsFolder_thisrun);
-ResultsFolder_conn_thisrun = [ResultsFolder_conn temp_name '\\'];
+
+if APPLY_SL
+    ResultsFolder_conn_thisrun = [ResultsFolder_conn temp_name '_afterSL\\'];
+else
+    ResultsFolder_conn_thisrun = [ResultsFolder_conn temp_name '\\'];
+end
 mkdir(ResultsFolder_conn_thisrun);
 
-% > name of confile in the SubjectFolder (can use wildcards)
+% name of confile in the SubjectFolder (can use wildcards)
 confile_name = '*\*.edf';
 
-% > which steps to run?
+% which steps to run?
 DO_HPF = true;
 DO_ICA = false; % if we tested human subjects (i.e. not "dry run"), set this to true
 RUN_ICA_ON_1HZ_FILTERED_DATA = false; % this dataset is already HPF'd at 1Hz, no need to filter again before ICA
@@ -638,14 +647,15 @@ for i = 1:length(SubjectIDs)
         end
 
         
-        %TODO% Apply surface laplacian to deal with volumn conduction issue?
+        % Apply surface Laplacian (SL) to deal with volumn conduction issue
         % https://www.youtube.com/watch?v=CodQ5-pmXdQ
         % https://www.fieldtriptoolbox.org/reference/ft_scalpcurrentdensity/
-        cfg = [];
-        cfg.method = 'finite'; % finite-difference method for the surface Laplacian on a triangulated sphere
-        cfg.elec = elec;
-        %cfg.feedback = string, 'no', 'text', 'textbar', 'gui' (default = 'text')
-        [all_blocks] = ft_scalpcurrentdensity(cfg, all_blocks);
+        if APPLY_SL
+            cfg = [];
+            cfg.method = 'finite'; % finite-difference method for the surface Laplacian on a triangulated sphere
+            %cfg.feedback = string, 'no', 'text', 'textbar', 'gui' (default = 'text')
+            [all_blocks] = ft_scalpcurrentdensity(cfg, all_blocks);
+        end
         
         
         % (1) Coherence
@@ -671,7 +681,11 @@ for i = 1:length(SubjectIDs)
         ft_connectivityplot(cfg, coh); %, cohm);
 
         set(gcf, 'Position', get(0, 'Screensize')); % make the figure full-screen
-        export_fig(gcf, [save_location 'coherence.png']); % use this tool to save the figure exactly as shown on screen
+        if APPLY_SL
+            export_fig(gcf, [save_location 'coherence_afterSL.png']); % use this tool to save the figure exactly as shown on screen
+        else
+            export_fig(gcf, [save_location 'coherence.png']); % use this tool to save the figure exactly as shown on screen
+        end
         
         
         % (2) Granger causality (directional connectivity)

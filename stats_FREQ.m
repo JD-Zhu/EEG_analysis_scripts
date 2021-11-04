@@ -27,6 +27,7 @@ is_conn = true;
 ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\']; % all subjects' freq analysis results are stored here
 if is_conn
     ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results_conn\' subj_group '\']; % all subjects' connectivity results are stored here
+    run_name = [run_name '_afterSL']; % if you want to use the version of results with SL applied
 end
 
 % can specify a subset of subjects to use,
