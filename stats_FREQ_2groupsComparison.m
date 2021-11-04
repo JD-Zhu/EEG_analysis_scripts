@@ -23,7 +23,7 @@
 varType = 'unequal'; %'equal';
 
 % PLEASE SPECIFY the folder for this statistical analysis
-stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\25vs12_conn\';
+stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\25vs12_conn_afterSL\';
 
 
 % location of freq results for each group:
