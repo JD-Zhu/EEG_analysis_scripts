@@ -13,17 +13,20 @@
 common();
 
 % Please specify:
-DataFolder = 'Z:\Analysis\Preprocess\NeuRA_SCI_SCS_CIPN_BUMP\EEG\DATA\'; % this directory should contain all the SubjectFolders
-ResultsFolder = 'Z:\Analysis\Preprocess\NeuRA_SCI_SCS_CIPN_BUMP\EEG\results_FREQ\'; % all subjects' freq analysis results will be stored here
-
+ProjectFolder = 'Z:\Analysis\Preprocess\NeuRA_SCI_SCS_CIPN_BUMP\EEG\';
+DataFolder = [ProjectFolder 'data\']; % this directory should contain all the SubjectFolders
+ResultsFolder = [ProjectFolder 'results\']; % all subjects' freq analysis results will be stored here
+ResultsFolder_conn = [ProjectFolder 'results_conn\']; % all subjects' connectivity results will be stored here
+        
 % find all subject folders containing raw EEG recording
-SubjectIDs = dir([DataFolder '*_S1']);
+SubjectIDs = dir([DataFolder '*_S*']);
 %SubjectIDs = [dir([DataFolder 'A*']); dir([DataFolder 'B*'])];
 %SubjectIDs = SubjectIDs([2 3 6]); % only process selected subjects
 %SubjectIDs([2 13 25]) = []; % remove certain subjects from the list
-
 SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
-%SubjectIDs = {'9008_S1'}; % or manually specify which subjects to process
+
+% alternatively: manually specify which subjects to process
+SubjectIDs = {'9011_S1', '9012_S1', '9013_S1', '9003_S1', '2000_S1', '101_S1', '103_S1'};
 
 
 % === Settings ===
@@ -50,17 +53,17 @@ confile_name = '*.eeg';
 % > which steps to run?
 DO_HPF = true;
 DO_ICA = true; % if we tested human subjects (i.e. not "dry run"), set this to true
-RUN_ICA_ON_1HZ_FILTERED_DATA = true; % for MEG (a lot more channels), we prob don't need to apply 1Hz HPF before running ICA
-                                     % for EEG, this step is recommended, otherwise ICA will just detect all the slow drifts & nothing useful
-                                     % (https://www.youtube.com/watch?v=2hrYEYSycGI    https://jinjeon.me/post/eeg-advanced/)
-                                     % I tried it - ICA decomposition was indeed poor quality if we don't apply HPF first 
-                                     % (doesn't have to be 1Hz though, which actually removes most of the eye artefact; 
-                                     % 0.1Hz seems to work well)
+FILTER_AGAIN_BEFORE_ICA = true; % for MEG (a lot more channels), we prob don't need to apply 1Hz HPF before running ICA
+                                % for EEG, this step is recommended, otherwise ICA will just detect all the slow drifts & nothing useful
+                                % (https://www.youtube.com/watch?v=2hrYEYSycGI    https://jinjeon.me/post/eeg-advanced/)
+                                % I tried it - ICA decomposition was indeed poor quality if we don't apply HPF first 
+                                % (doesn't have to be 1Hz though, which actually removes most of the eye artefact; 
+                                % 0.1Hz seems to work well)
 DO_BEH_CHECK = false; % if subjects produced beh responses, set this to true
 DO_PCA = false; % if subjects produced vocal responses, set this to true
 
 % when running many subjects in one batch, process all auto steps until the first manual step
-RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = false;   % auto processing before 1st manual step
+RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = true;   % auto processing before 1st manual step
 RUN_UP_TO_AFTER_MANUAL_ARTEFACT = false;    % perform 1st manual step (mark artefact)
 RUN_UP_TO_ICA = false;                      % auto processing before 2nd manual step (ICA component analysis)
 RUN_UP_TO_ICA_REJECTION = false;            % perform 2nd manual step (select ICA comps to reject)
@@ -241,9 +244,9 @@ for i = 1:length(SubjectIDs)
                 output_file_ICA = [output_path 'ICA_comps.mat'];        
                 if (exist(output_file_ICA, 'file') ~= 2)    
                     
-                    if (RUN_ICA_ON_1HZ_FILTERED_DATA) % apply 1Hz HPF before running ICA
+                    if (FILTER_AGAIN_BEFORE_ICA) % apply 1Hz HPF (changed to 0.1Hz as that works better) before running ICA
                         [comp] = ICA_run(true, rawfile, arft, selChLabel);
-                    else % directly run ICA without applying 1Hz HPF
+                    else % directly run ICA without applying another HPF
                         [comp] = ICA_run(false, alldata);
                     end
 
