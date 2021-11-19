@@ -1,14 +1,14 @@
 % browse raw data to remove noisy segments (e.g. clenched jaw)
 % http://www.fieldtriptoolbox.org/walkthrough/#visual-data-inspection
 
-function [arft] = mark_artefact(alldata)
+function [arft] = mark_artefact(alldata, v_scale)
 
     cfg           = [];
     cfg.viewmode  = 'vertical';
     cfg.continous = 'yes';
 
     cfg.blocksize = 120; % display 2-min segments
-    cfg.ylim      = [ -256   256 ];
+    cfg.ylim      = v_scale;
     %{
     % if trigger channels were retained in this data, first use 
     % this scaling to mark the break periods (ie. when there are no triggers)

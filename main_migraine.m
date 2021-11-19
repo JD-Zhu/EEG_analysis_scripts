@@ -302,7 +302,7 @@ for i = 1:length(SubjectIDs)
                 EEG = eeg_checkset( EEG );
             end
             
-            [arft] = mark_artefact(alldata);
+            [arft] = mark_artefact(alldata, [-256 256]);
             
             if ~BROWSING_WITHOUT_SAVE
                 save(output_file, 'arft', '-v7.3');

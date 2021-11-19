@@ -63,7 +63,7 @@ DO_BEH_CHECK = false; % if subjects produced beh responses, set this to true
 DO_PCA = false; % if subjects produced vocal responses, set this to true
 
 % when running many subjects in one batch, process all auto steps until the first manual step
-RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = true;   % auto processing before 1st manual step
+RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = false;   % auto processing before 1st manual step
 RUN_UP_TO_AFTER_MANUAL_ARTEFACT = false;    % perform 1st manual step (mark artefact)
 RUN_UP_TO_ICA = false;                      % auto processing before 2nd manual step (ICA component analysis)
 RUN_UP_TO_ICA_REJECTION = false;            % perform 2nd manual step (select ICA comps to reject)
@@ -92,7 +92,7 @@ load('all_labels_AntNeuro64.mat'); % list of 61 real channels (i.e. excluding M1
 
 %% Stage 1: preprocessing
 
-for i = 1:length(SubjectIDs)
+for i = 2:length(SubjectIDs)
     
     SubjectID = cell2mat(SubjectIDs(i));
     SubjectFolder = [DataFolder SubjectID '\\'];
@@ -176,7 +176,7 @@ for i = 1:length(SubjectIDs)
             % Print out SubjectID so we know which subject we are working on
             fprintf(['\nCURRENT SUBJECT: ' SubjectID '\n\n']); 
 
-            [arft] = mark_artefact(alldata);
+            [arft] = mark_artefact(alldata, [-32 32]);
             save(output_file, 'arft', '-v7.3');
         else
             load(output_file);
