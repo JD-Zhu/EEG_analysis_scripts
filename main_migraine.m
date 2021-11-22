@@ -403,7 +403,7 @@ for i = 1:length(SubjectIDs)
                 % set filename for diary (to record the components selected)
                 set(0,'DiaryFile', [output_path 'ICA_log.txt']);
 
-                [alldata] = ICA_reject_comps(alldata, comp, lay);
+                [alldata] = ICA_reject_comps(alldata, comp, lay, output_path);
 
                 save(output_file, 'alldata', '-v7.3');
             else

@@ -1,7 +1,7 @@
 % Manually select which ICA components to reject:
 % eye blinks, other large muscle artefacts (e.g. jaw clenching, hand movements)
 
-function [data_clean] = ICA_reject_comps(data, comp, lay)
+function [data_clean] = ICA_reject_comps(data, comp, lay, output_path)
 
     %% Plot the ICA components, so we can identify which comps to remove
 
@@ -17,6 +17,9 @@ function [data_clean] = ICA_reject_comps(data, comp, lay)
     cfg.comment = 'no';
     ft_topoplotIC (cfg, comp);
 
+    set(gcf, 'Position', get(0, 'Screensize')); % make the figure full-screen
+    export_fig(gcf, [output_path 'ICA_comps.png']); % save the ICA topoplot
+
     cfg          = [];
     %cfg.channel  = 1:10; % components to be plotted
     cfg.viewmode = 'component';
@@ -30,7 +33,7 @@ function [data_clean] = ICA_reject_comps(data, comp, lay)
     cfg.channel  = 'all'; % components to be plotted
     cfg.viewmode = 'vertical';
     cfg.blocksize = 120; % display 120-sec segments
-    cfg.ylim     = [ -32   32 ];
+    cfg.ylim     = [ -64  64 ];
     cfg.layout   = lay;
     ft_databrowser(cfg, data);
     
@@ -57,7 +60,7 @@ function [data_clean] = ICA_reject_comps(data, comp, lay)
         cfg.channel  = 'all'; % components to be plotted
         cfg.viewmode = 'vertical';
         cfg.blocksize = 120; % display 120-sec segments
-        cfg.ylim     = [ -32   32 ];
+        cfg.ylim     = [ -64  64 ];
         cfg.layout   = lay;
         ft_databrowser(cfg, data_clean);
         drawnow;
