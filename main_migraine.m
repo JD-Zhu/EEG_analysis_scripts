@@ -40,7 +40,9 @@ if strcmp(subj_group, 'migraineurs')
 elseif strcmp(subj_group, 'controls')
     SubjectIDs = remaining_13_ctrls;
 end
-%SubjectIDs = {'Subject_891'}; % for demo
+
+% or process these new subjects only
+SubjectIDs = {'Subject_902','Subject_903','Subject_904','Subject_905','Subject_906'};
 
 
 % === Settings ===
@@ -60,7 +62,7 @@ end
 output_name = ['output' run_name '\\']; % location to save intermediate output files inside each SubjectFolder
 
 % For connectivity analysis ONLY - apply surface Laplacian to deal with volumn conduction issue?
-APPLY_SL = true;
+APPLY_SL = false;
             
 % location to save the results for all subjects
 temp_name = run_name(2:end);
@@ -242,25 +244,30 @@ for i = 1:length(SubjectIDs)
         alldata.label(1:27) = temp;
         alldata.hdr.label(1:27) = temp; % also update this (just in case)
         
-        % Extract the EC / EO section of the recording
-        if strcmp(subj_group, 'migraineurs') % for migraineurs, all subjects had the same timing
-            if strcmp(run_name(1:3), '_EC')
-                latency = [0 290]; % EC: 0 - 290 sec
-            elseif strcmp(run_name(1:3), '_EO')
-                latency = [300 10000]; % EO: from 300 sec onwards
+        % Extract the EC / EO section of the recording:
+        % (only do this for old data - Bec now records EC & EO into 2
+        % separate files, and each file is 15mins - we manually select the
+        % best 5mins by marking the rest as artefact)
+        if ~strcmp(SubjectID(1:9), 'Subject_9') % Subject_9xx would be Bec's data
+            if strcmp(subj_group, 'migraineurs') % for migraineurs, all subjects had the same timing
+                if strcmp(run_name(1:3), '_EC')
+                    latency = [0 290]; % EC: 0 - 290 sec
+                elseif strcmp(run_name(1:3), '_EO')
+                    latency = [300 10000]; % EO: from 300 sec onwards
+                end
+            elseif strcmp(subj_group, 'controls') % for controls, look up the timing we manually created and saved for each subject
+                load([SubjectFolder 'EC_EO_timing.mat']);
+                if strcmp(run_name(1:3), '_EC')
+                    latency = EC_EO_timing.EC;
+                elseif strcmp(run_name(1:3), '_EO')
+                    latency = EC_EO_timing.EO;
+                end
             end
-        elseif strcmp(subj_group, 'controls') % for controls, look up the timing we manually created and saved for each subject
-            load([SubjectFolder 'EC_EO_timing.mat']);
-            if strcmp(run_name(1:3), '_EC')
-                latency = EC_EO_timing.EC;
-            elseif strcmp(run_name(1:3), '_EO')
-                latency = EC_EO_timing.EO;
-            end
+            % now keep the relevant section of data & discard the rest
+            cfg = [];
+            cfg.latency = latency;
+            alldata = ft_selectdata(cfg, alldata);
         end
-        % now keep the relevant section of data & discard the rest
-        cfg = [];
-        cfg.latency = latency;
-        alldata = ft_selectdata(cfg, alldata);
 
         
         % >>>
