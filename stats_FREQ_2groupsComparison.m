@@ -23,7 +23,7 @@
 varType = 'unequal'; %'equal';
 
 % PLEASE SPECIFY the folder for this statistical analysis
-stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\25vs12_conn_afterSL\';
+stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\25vs17\';
 
 
 % location of freq results for each group:
@@ -59,6 +59,19 @@ hold off;
 
 export_fig(gcf, [stats_folder 'overall_power_mig-vs-ctrl.png']);
 
+% plot log-transformed version
+figure; hold on;
+plot(mig_avg.freq, mean(log(mig_avg.powspctrm)));
+plot(ctrl_avg.freq, mean(log(ctrl_avg.powspctrm)));
+
+xlim(x_limits);
+xlabel('Frequency (Hz)');
+ylabel('Power (log[uV^2]');
+legend({'Migraineurs', 'Controls'});
+hold off;
+
+export_fig(gcf, [stats_folder 'overall_power_logged_mig-vs-ctrl.png']);
+
 
 %% run t-test (mig vs ctrl) on a particular freq range
 freq_range = 9:12;
@@ -68,6 +81,8 @@ ctrl = squeeze(mean(ctrl_indi.powspctrm, 2)); % avg over all channels
 
 a = mean(mig(:,freq_range), 2); % avg over the selected freq range
 b = mean(ctrl(:,freq_range), 2); % avg over the selected freq range
+%a = mean(log(mig(:,freq_range)), 2); % take the log, then avg over the selected freq range
+%b = mean(log(ctrl(:,freq_range)), 2); % take the log, then avg over the selected freq range
 
 % this function conducts a two-sample t-test
 [h,p,ci,stats] = ttest2(a, b, 'Vartype',varType); % or should it be equal variance? (p-values were similar)
