@@ -42,7 +42,7 @@ elseif strcmp(subj_group, 'controls')
 end
 
 % or process these new subjects only
-SubjectIDs = {'Subject_902','Subject_903','Subject_904','Subject_905','Subject_906'};
+SubjectIDs = {'Subject_205','Subject_207','Subject_208','Subject_209','Subject_210'};
 
 
 % === Settings ===

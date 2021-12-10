@@ -20,7 +20,7 @@ run_name = 'EC_LPF30';
 %run_name = 'offlineHPF_LMref';
 
 % are we working with connectivity results here?
-is_conn = true;
+is_conn = false;
 
 % run the #define section
 %global ResultsFolder; common();
