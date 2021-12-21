@@ -9,9 +9,14 @@ function [data_clean] = ICA_reject_comps(data, comp, lay, output_path)
     ft_hastoolbox('brewermap', 1);         % ensure this toolbox is on the path
     colormap(flipud(brewermap(64, 'RdBu'))) % change the colormap
     
+    nComps = length(comp.label); % how many ICA comps were created?
+    if nComps > 49
+        nComps = 49; % only plot the first 49 comps (fits on 1 page)
+    end
+    
     figure; % this line is necessary, or else ft_topoplotIC won't plot
     cfg = [];
-    cfg.component = 1:49; % this fits on 1 page     
+    cfg.component = 1:nComps;   
     cfg.layout = lay;
     cfg.marker = 'off';
     cfg.comment = 'no';
