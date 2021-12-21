@@ -26,7 +26,7 @@ SubjectIDs = dir([DataFolder '*_S*']);
 SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
 
 % alternatively: manually specify which subjects to process
-SubjectIDs = {'9011_S1', '9012_S1', '9013_S1', '9003_S1', '2000_S1', '101_S1', '103_S1'};
+%SubjectIDs = {'9011_S1', '9012_S1', '9013_S1', '9003_S1', '2000_S1', '101_S1', '103_S1'};
 
 
 % === Settings ===
@@ -64,7 +64,7 @@ DO_PCA = false; % if subjects produced vocal responses, set this to true
 
 % when running many subjects in one batch, process all auto steps until the first manual step
 RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = false;   % auto processing before 1st manual step
-RUN_UP_TO_AFTER_MANUAL_ARTEFACT = false;    % perform 1st manual step (mark artefact)
+RUN_UP_TO_AFTER_MANUAL_ARTEFACT = false;    % perform 1st manual step (mark artefact & reject bad channels)
 RUN_UP_TO_ICA = false;                      % auto processing before 2nd manual step (ICA component analysis)
 RUN_UP_TO_ICA_REJECTION = false;            % perform 2nd manual step (select ICA comps to reject)
 
@@ -92,7 +92,7 @@ load('all_labels_AntNeuro64.mat'); % list of 61 real channels (i.e. excluding M1
 
 %% Stage 1: preprocessing
 
-for i = 2:length(SubjectIDs)
+for i = 1:length(SubjectIDs)
     
     SubjectID = cell2mat(SubjectIDs(i));
     SubjectFolder = [DataFolder SubjectID '\\'];
@@ -100,6 +100,9 @@ for i = 2:length(SubjectIDs)
     % create output folder for all the save files
     output_path = [SubjectFolder output_name];
     mkdir(output_path);
+    
+    disp(['   SubjectFolder: ' SubjectFolder]);
+    disp(['   output_path    ' output_path]);
 
 
     S1_output_file = [output_path S1_output_filename];
@@ -267,6 +270,7 @@ for i = 2:length(SubjectIDs)
                 set(0,'DiaryFile', [output_path 'ICA_log.txt']);
 
                 [alldata] = ICA_reject_comps(alldata, comp, lay, output_path);
+                close all;
 
                 save(output_file, 'alldata', '-v7.3');
             else
