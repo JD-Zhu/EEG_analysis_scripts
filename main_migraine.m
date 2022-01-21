@@ -248,7 +248,7 @@ for i = 1:length(SubjectIDs)
         % (only do this for old data - Bec now records EC & EO into 2
         % separate files, and each file is 15mins - we manually select the
         % best 5mins by marking the rest as artefact)
-        if ~strcmp(SubjectID(1:9), 'Subject_9') % Subject_9xx would be Bec's data
+        if ~strcmp(SubjectID(1:9), 'Subject_2') % Subject_2xx would be Bec's data
             if strcmp(subj_group, 'migraineurs') % for migraineurs, all subjects had the same timing
                 if strcmp(run_name(1:3), '_EC')
                     latency = [0 290]; % EC: 0 - 290 sec
