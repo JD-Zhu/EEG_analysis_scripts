@@ -33,6 +33,10 @@ end
 % can specify a subset of subjects to use,
 % or leave empty (to use all subjs in the folder)
 SubjectIDs = [];
+% Final set of 17 controls (age & gender matched to migraineurs)
+if strcmp(subj_group, 'controls')
+    SubjectIDs = {'Subject_891', 'Subject_675', 'Subject_690', 'Subject_634', 'Subject_885', 'Subject_622', 'Subject_844', 'Subject_623', 'Subject_251', 'Subject_252', 'Subject_253', 'Subject_254', 'Subject_101', 'Subject_495', 'Subject_642', 'Subject_809', 'Subject_610'};
+end
 % Groups based on migraine phases:
 %SubjectIDs = {'Subject_500', 'Subject_548'}; % prodrome
 %SubjectIDs = {'Subject_583', 'Subject_673', 'Subject_680'}; % postdrome
