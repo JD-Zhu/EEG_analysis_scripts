@@ -23,7 +23,7 @@
 varType = 'unequal'; %'equal';
 
 % PLEASE SPECIFY the folder for this statistical analysis
-stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\25vs17\';
+stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\17vs17\';
 
 
 % location of freq results for each group:
@@ -79,10 +79,10 @@ freq_range = 9:12;
 mig = squeeze(mean(mig_indi.powspctrm, 2)); % avg over all channels
 ctrl = squeeze(mean(ctrl_indi.powspctrm, 2)); % avg over all channels
 
-a = mean(mig(:,freq_range), 2); % avg over the selected freq range
-b = mean(ctrl(:,freq_range), 2); % avg over the selected freq range
-%a = mean(log(mig(:,freq_range)), 2); % take the log, then avg over the selected freq range
-%b = mean(log(ctrl(:,freq_range)), 2); % take the log, then avg over the selected freq range
+%a = mean(mig(:,freq_range), 2); % avg over the selected freq range
+%b = mean(ctrl(:,freq_range), 2); % avg over the selected freq range
+a = mean(log(mig(:,freq_range)), 2); % take the log, then avg over the selected freq range
+b = mean(log(ctrl(:,freq_range)), 2); % take the log, then avg over the selected freq range
 
 % this function conducts a two-sample t-test
 [h,p,ci,stats] = ttest2(a, b, 'Vartype',varType); % or should it be equal variance? (p-values were similar)
@@ -94,6 +94,9 @@ p            % p-value
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ===== Individual channel analysis ===== %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+stats_folder_indi_chan = [stats_folder 'indi-chan-analysis\'];
+mkdir(stats_folder_indi_chan);
 
 
 %% t-test at each channel & each freq (27 x 30 = 810 comparisons)
@@ -121,7 +124,7 @@ colorbar
 ylabel('EEG channel');
 xlabel('Frequency (Hz)');
 
-export_fig(gcf, [stats_folder 'indi-chan-analysis\indi-chan-analysis.png']);
+export_fig(gcf, [stats_folder_indi_chan 'indi-chan-analysis.png']);
 
 
 %% t-test at each channel for each freq band (27 x 3 = 81 comparisons)
@@ -154,7 +157,7 @@ freq.powspctrm = t_values;
 freq.freq = 0; % we no longer have a frequency dimension, just fill with a dummy value
 
 % plot topography based on the t-values
-plot_TFR_topo(freq, lay, freq_band, [], [stats_folder 'indi-chan-analysis\tvalues_']);
+plot_TFR_topo(freq, lay, freq_band, [], [stats_folder_indi_chan 'tvalues_']);
 
 
 %% plot the topography difference btwn two groups
@@ -178,6 +181,9 @@ plot_TFR_topo(diff_GA, lay, 'beta', [13 25], [stats_folder 'topo_mig-minus-ctrl_
 % https://www.fieldtriptoolbox.org/tutorial/cluster_permutation_freq/
 % https://www.fieldtriptoolbox.org/workshop/madrid2019/tutorial_stats/#2-compute-between-participants-contrasts
 
+stats_folder_cluster = [stats_folder_indi_chan 'cluster_stat\'];
+mkdir(stats_folder_cluster);
+
 % load the data
 load([migraineurs_folder 'allSubjects_freq.mat']);
 mig = allSubjects_freq;
@@ -191,13 +197,17 @@ load('neighbours_NeuroPrax32.mat'); % obtained using 'trigangulation' method in 
 %foi = [1 30];
 %freq_band = 'spatio-freq';
 % Opt 2: find spatial cluster for a particular freq band:
-foi = 9; %[9 12];
+foi = 9:12;
 freq_band = 'alpha';
 
 cfg = [];
 cfg.channel = 'all';
 cfg.frequency = foi;
-cfg.avgoverfreq = 'yes'; % enable for Opt 2
+if strcmp(freq_band, 'spatio-freq')
+    cfg.avgoverfreq = 'no'; % if searching for spatio-freq cluster, don't avg
+else
+    cfg.avgoverfreq = 'yes'; % if using a particular freq band, avg over that band
+end
 
 cfg.method = 'montecarlo';
 cfg.correctm = 'cluster'; %'no'; % it is common in MEG studies to run uncorrected at cfg.alpha = 0.001
@@ -251,13 +261,13 @@ cfg.correcttail = 'prob'; % correct for 2-tailedness
 [stat] = ft_freqstatistics(cfg, mig{:}, ctrl{:});
 length(find(stat.mask)) % display how many chans were significant/marginal
 
-%save([stats_folder 'cluster_stat\minnbchan' mat2str(cfg.minnbchan) '_' freq_band '.mat'], 'stat');
+%save([stats_folder_cluster 'minnbchan' mat2str(cfg.minnbchan) '_' freq_band '.mat'], 'stat');
 
 
 %% ft_clusterplot (plots t-values by default)
 % this is a wrapper around ft_topoplot, automatically extracts info about the cluster
 
-load([stats_folder 'cluster_stat\minnbchan2_alpha.mat']);
+load([stats_folder_cluster 'minnbchan2_alpha.mat']);
 
 % use a nice-looking colourmap
 %ft_hastoolbox('brewermap', 1); % ensure this toolbox is on the path
@@ -282,7 +292,7 @@ cfg.colorbar = 'yes'; % shows the scaling
 
 ft_clusterplot(cfg, stat);
 
-%export_fig(gcf, [stats_folder 'indi-chan-analysis\cluster_stat\minnbchan2_' freq_band '.png']);
+%export_fig(gcf, [stats_folder_cluster 'minnbchan2_' freq_band '.png']);
 
 
 
