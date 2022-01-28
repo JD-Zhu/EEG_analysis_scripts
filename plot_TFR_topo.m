@@ -20,7 +20,7 @@ function plot_TFR_topo(freq, lay, freq_band, freq_range, save_location)
     %cfg.comment      = 'xlim'; % display date & freq range
     cfg.comment      = 'no';
     cfg.layout       = lay;
-    figure; title(freq_band);
+    cfg.dataname     = freq_band; % display this in the figure window title bar
     ft_topoplotTFR(cfg, freq); 
 
     if ~strcmp(save_location, '')
