@@ -13,7 +13,7 @@
 common();
 
 % Please specify:
-subj_group = 'migraineurs'; %'controls';
+subj_group = 'migraineurs'; % Options: 'migraineurs', 'controls'
 
 ProjectFolder = 'Z:\Analysis\Judy\EpisodicMigraine\';
 DataFolder = [ProjectFolder 'data\' subj_group '\']; % this directory should contain all the SubjectFolders
@@ -28,21 +28,23 @@ SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
 migraineurs_12 = {'Subject_500', 'Subject_548', 'Subject_583', 'Subject_661', ...
             'Subject_664', 'Subject_671', 'Subject_673', 'Subject_677', ...
             'Subject_680', 'Subject_681', 'Subject_696', 'Subject_800'};
+migraineurs_new5 = {'Subject_205', 'Subject_207', 'Subject_208', 'Subject_209', 'Subject_210'};
 controls_12 = {'Subject_101', 'Subject_495', 'Subject_622', 'Subject_624', ...
             'Subject_634', 'Subject_642', 'Subject_675', 'Subject_690', ...
             'Subject_809', 'Subject_885', 'Subject_886', 'Subject_891'};
-remaining_13_ctrls = {'Subject_608', 'Subject_610', 'Subject_613', 'Subject_623', ...
+controls_13_remaining = {'Subject_608', 'Subject_610', 'Subject_613', 'Subject_623', ...
                 'Subject_629', 'Subject_631', 'Subject_640', 'Subject_645', ...
                 'Subject_682', 'Subject_804', 'Subject_808', 'Subject_844', 'Subject_846'};
-
+controls_4new = {'Subject_251', 'Subject_252', 'Subject_253', 'Subject_254'};
+            
 if strcmp(subj_group, 'migraineurs')
-    SubjectIDs = migraineurs_12;
+    SubjectIDs = [migraineurs_12 migraineurs_new5];
 elseif strcmp(subj_group, 'controls')
-    SubjectIDs = remaining_13_ctrls;
+    SubjectIDs = [controls_12 controls_13_remaining controls_4new];
 end
 
 % or process these new subjects only
-SubjectIDs = {'Subject_205','Subject_207','Subject_208','Subject_209','Subject_210'};
+%SubjectIDs = {'Subject_610'};
 
 
 % === Settings ===
@@ -615,6 +617,8 @@ for i = 1:length(SubjectIDs)
         cfg.foi     = 1:1:30; % 1 / cfg1.length = 0.25 (the longer the segments, the more reso we can have here)
                                   % so for a reso of 0.005Hz, we need at least 1 segment with a length of 1 / 0.005 = 200 seconds
         freq        = ft_freqanalysis(cfg, all_blocks);
+        
+        freq.freq   = cfg.foi; % for some reason the "freq" field contains non-whole numbers, fix it manually
 
         
         % this fn takes care of all the plotting 
