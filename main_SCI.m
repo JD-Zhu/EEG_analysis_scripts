@@ -64,7 +64,7 @@ DO_PCA = false; % if subjects produced vocal responses, set this to true
 
 % when running many subjects in one batch, process all auto steps until the first manual step
 RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = false;   % auto processing before 1st manual step
-RUN_UP_TO_AFTER_MANUAL_ARTEFACT = false;    % perform 1st manual step (mark artefact & reject bad channels)
+RUN_UP_TO_AFTER_MANUAL_ARTEFACT = true;    % perform 1st manual step (mark artefact & reject bad channels)
 RUN_UP_TO_ICA = false;                      % auto processing before 2nd manual step (ICA component analysis)
 RUN_UP_TO_ICA_REJECTION = false;            % perform 2nd manual step (select ICA comps to reject)
 
@@ -445,6 +445,8 @@ for i = 1:length(SubjectIDs)
         cfg.foi     = 0:0.005:30; % 1 / cfg1.length = 0.25 (the longer the segments, the more reso we can have here)
                                   % so for a reso of 0.005Hz, we need at least 1 segment with a length of 1 / 0.005 = 200 seconds
         freq         = ft_freqanalysis(cfg, all_blocks);
+
+        freq.freq   = cfg.foi; % for some reason the "freq" field contains non-whole numbers, fix it manually
 
         
         % where to save the figures
