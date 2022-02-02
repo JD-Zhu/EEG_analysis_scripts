@@ -27,7 +27,7 @@ is_conn = false;
 ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\']; % all subjects' freq analysis results are stored here
 if is_conn
     ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results_conn\' subj_group '\']; % all subjects' connectivity results are stored here
-    run_name = [run_name '_afterSL']; % if you want to use the version of results with SL applied
+    %run_name = [run_name '_afterSL']; % if you want to use the version of results with SL applied
 end
 
 % can specify a subset of subjects to use,
@@ -38,9 +38,9 @@ if strcmp(subj_group, 'controls')
     SubjectIDs = {'Subject_891', 'Subject_675', 'Subject_690', 'Subject_634', 'Subject_885', 'Subject_622', 'Subject_844', 'Subject_623', 'Subject_251', 'Subject_252', 'Subject_253', 'Subject_254', 'Subject_101', 'Subject_495', 'Subject_642', 'Subject_809', 'Subject_610'};
 end
 % Groups based on migraine phases:
-%SubjectIDs = {'Subject_500', 'Subject_548'}; % prodrome
-%SubjectIDs = {'Subject_583', 'Subject_673', 'Subject_680'}; % postdrome
-%SubjectIDs = {'Subject_661', 'Subject_664', 'Subject_671', 'Subject_677', 'Subject_681', 'Subject_696', 'Subject_800'}; % interictal
+%SubjectIDs = {'Subject_500', 'Subject_548', 'Subject_208'}; % prodrome
+%SubjectIDs = {'Subject_583', 'Subject_673', 'Subject_680', 'Subject_205'}; % postdrome
+%SubjectIDs = {'Subject_661', 'Subject_664', 'Subject_671', 'Subject_677', 'Subject_681', 'Subject_696', 'Subject_800', 'Subject_207', 'Subject_209', 'Subject_210'}; % interictal
 % Groups based on migraine frequency:
 %SubjectIDs = {'Subject_677', 'Subject_681', 'Subject_696', 'Subject_800'}; % <1 day / month
 %SubjectIDs = {'Subject_583', 'Subject_661', 'Subject_671'}; % 1-2 days / month
