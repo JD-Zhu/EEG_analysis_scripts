@@ -15,7 +15,7 @@ stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\migraine_phases\';
 %stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\migraine_frequency\';
 
 % PLEASE SPECIFY the subject groups for comparison
-groups = {'GA_prodrome', 'GA_postdrome', 'GA_interictal'};
+groups = {'GA_prodrome', 'GA_postdrome+1', 'GA_interictal'};
 %groups = {'GA_lessThan1day', 'GA_1-2days', 'GA_moreThan3days'};
 % note: you need to have these GA folders ready inside the stats_folder
 
@@ -44,6 +44,47 @@ legend(figure_legends);
 hold off;
 
 export_fig(gcf, [stats_folder 'overall_power_for_each_group.png']);
+
+
+% plot log-transformed version
+figure; hold on;
+for g = 1:length(groups)
+    load([stats_folder groups{g} '\GA_avg.mat']); % GA for this group
+    GA_freq.powspctrm = log(GA_freq.powspctrm);
+    plot(GA_freq.freq, mean(GA_freq.powspctrm));
+end
+
+xlim(x_limits);
+xlabel('Frequency (Hz)');
+ylabel('Power (log[uV^2]');
+legend(figure_legends);
+hold off;
+
+export_fig(gcf, [stats_folder 'overall_power_logged.png']);
+
+
+%% Analysis of overall power
+% run ANOVA (comparison across all groups) on a particular freq range
+freq_range = 9:12;
+
+% collate data for anova (each subject should have a single value)
+data_for_anova = [];
+grouping_var = {};
+for g = 1:length(groups)
+    load([stats_folder groups{g} '\GA_individuals.mat']); % GA for this group
+    data = squeeze(mean(GA_freq_indi.powspctrm, 2)); % avg over all channels
+    data = mean(data(:,freq_range), 2); % avg over the selected freq range
+
+    data_for_anova = vertcat(data_for_anova, data); % append the data from all subjects in this group
+    % also append this group's label accordingly (same number of times as how many subjects were appended)
+    for count = 1:length(data)
+        grouping_var = [grouping_var; groups{g}]; 
+    end
+end
+
+[p,tbl,stats] = anova1(data_for_anova, grouping_var, 'off');
+cell2mat(tbl(2,5)) % print the f-value
+p % print the p-value; can also use this alternative: cell2mat(tbl(2,6))
 
 
 
