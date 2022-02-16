@@ -137,7 +137,7 @@ for i = 1:N_chan % loop through each channel
 end
 
 figure; title('t-values (migraineurs > controls)');
-imagesc(t_values)
+imagesc(t_values, [-4.5 4.5]) % adjust clims manually
 colorbar
 ylabel('EEG channel');
 xlabel('Frequency (Hz)');
@@ -175,7 +175,8 @@ freq.powspctrm = t_values;
 freq.freq = 0; % we no longer have a frequency dimension, just fill with a dummy value
 
 % plot topography based on the t-values
-plot_TFR_topo(freq, lay, freq_band, [], [stats_folder_indi_chan 'tvalues_' logged_suffix '_']);
+zlim = [0 3];
+plot_TFR_topo(freq, lay, freq_band, [], zlim, [stats_folder_indi_chan 'tvalues_' logged_suffix '_']);
 
 
 %% plot the topography difference btwn two groups
