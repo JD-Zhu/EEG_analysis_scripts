@@ -5,17 +5,19 @@
 % @lay              channel layout
 % @freq_band        string, e.g. 'theta'
 % @freq_range       e.g. [4 8]
-% @zlim             axis lims for t-values, e.g. [0 3]
 % @save_location    where to save the figures (optional).
 %                   if you don't want to save, just specify as ''
+% @varargin{1}      axis limits for t-values, e.g. [0 3]
 %
 % Author: Judy Zhu (github.com/JD-Zhu)
 %
-function plot_TFR_topo(freq, lay, freq_band, freq_range, zlim, save_location)
+function plot_TFR_topo(freq, lay, freq_band, freq_range, save_location, varargin)
 
     cfg = [];
     cfg.xlim         = freq_range; % freq range to plot (NOTE this is diff from FT documentation, as we only have 2 dimensions in "freq", ie. not TFR)
-    cfg.zlim         = zlim;
+    if length(varargin) > 0
+        cfg.zlim     = varargin{1};
+    end
     cfg.marker       = 'on';
     cfg.style        = 'straight'; % 'both';
     cfg.colorbar     = 'yes';
