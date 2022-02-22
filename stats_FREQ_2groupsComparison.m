@@ -176,7 +176,7 @@ freq.freq = 0; % we no longer have a frequency dimension, just fill with a dummy
 
 % plot topography based on the t-values
 zlim = [0 3];
-plot_TFR_topo(freq, lay, freq_band, [], [stats_folder_indi_chan 'tvalues_' logged_suffix '_new'], zlim);
+plot_TFR_topo(freq, lay, freq_band, [], [stats_folder_indi_chan 'tvalues_' logged_suffix '_'], zlim);
 
 
 %% plot the topography difference btwn two groups
