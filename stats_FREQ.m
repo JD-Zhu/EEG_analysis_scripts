@@ -13,28 +13,23 @@
 % = Settings =
 
 % PLEASE SPECIFY:
-which_project = 'migraine'; % Options: 'SCI', 'migraine'
+which_project = 'SCI'; % Options: 'SCI', 'migraine'
+subj_group = ''; % Options: 'migraineurs', 'controls' (for SCI project, please leave empty for now)
 
-subj_group = 'controls'; % Options: 'migraineurs', 'controls'
-run_name = 'EC_LPF30';
-%run_name = 'offlineHPF_LMref';
+%ProjectFolder = 'Z:\Analysis\Judy\EpisodicMigraine\';
+ProjectFolder = 'Z:\Analysis\Preprocess\NeuRA_SCI_SCS_CIPN_BUMP\EEG\';
+%run_name = 'EC_LPF30';
+run_name = 'offlineHPF_LMref';
 
 % are we working with connectivity results here?
 is_conn = false;
 
-% run the #define section
-%global ResultsFolder; common();
-ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results\' subj_group '\']; % all subjects' freq analysis results are stored here
-if is_conn
-    ResultsFolder = ['Z:\Analysis\Judy\EpisodicMigraine\results_conn\' subj_group '\']; % all subjects' connectivity results are stored here
-    %run_name = [run_name '_afterSL']; % if you want to use the version of results with SL applied
-end
 
 % can specify a subset of subjects to use,
 % or leave empty (to use all subjs in the folder)
 SubjectIDs = [];
 % Final set of 17 controls (age & gender matched to migraineurs)
-if strcmp(subj_group, 'controls')
+if strcmp(which_project, 'migraine') && strcmp(subj_group, 'controls')
     SubjectIDs = {'Subject_101', 'Subject_251', 'Subject_252', 'Subject_253', 'Subject_254', 'Subject_495', 'Subject_610', 'Subject_622', 'Subject_623', 'Subject_634', 'Subject_642', 'Subject_675', 'Subject_690', 'Subject_809', 'Subject_844', 'Subject_885', 'Subject_891'};
 end
 % Groups based on migraine phases:
@@ -48,15 +43,30 @@ end
 
 
 % automatic setup
+%global ResultsFolder; common();
+ResultsFolder = [ProjectFolder 'results\' subj_group '\']; % all subjects' freq analysis results are stored here
+if is_conn
+    ResultsFolder = [ProjectFolder 'results_conn\' subj_group '\']; % all subjects' connectivity results are stored here
+    %run_name = [run_name '_afterSL']; % if you want to use the version of results with SL applied
+end
 ResultsFolder_thisrun = [ResultsFolder run_name '\']; % where to read in the result files for all subjects
 save_location = [ResultsFolder_thisrun 'GA_' subj_group '\']; % where to save the GA & figures
 mkdir(save_location);
 
 % if subject list is empty, then use all results files in the folder
 if isempty(SubjectIDs)
-    SubjectIDs = dir([ResultsFolder_thisrun 'Subject_*.mat']);
+    SubjectIDs = dir([ResultsFolder_thisrun '*.mat']);
     SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
     SubjectIDs = cellfun(@(x) x(1:end-4), SubjectIDs, 'un', 0); % remove the '.mat' extension
+end
+
+% settings for each project
+if strcmp(which_project, 'migraine')
+    x_limits = [2 30]; % for plotting, we are interested in 2-30Hz (everything else was filtered out)
+    freq_field = 1:30; % for fixing up the freq field (for some reason the freq values are not whole numbers)
+elseif strcmp(which_project, 'SCI')
+    x_limits = [1 30]; % anything below 1Hz is way over powered (rendering the whole plot unviewable)
+    freq_field = 0:0.005:30;
 end
 
 
@@ -65,16 +75,9 @@ end
 % if we are working with conn results, skip this plot
 if ~is_conn
     
-    % set up the "overall power" plot (one line == one subject)
+    % plot "overall power" (one line == one subject)
     figure; hold on;
-    if strcmp(which_project, 'migraine')
-        x_limits = [2 30]; % for plotting (anything below 2Hz was affected by the HPF)
-        freq_field = 1:30; % for fixing up the freq field (for some reason the freq values are not whole numbers)
-    elseif strcmp(which_project, 'SCI')
-        x_limits = [0 30];
-        freq_field = 0:0.005:30;
-    end
-
+    
     % each cycle reads in one '.mat' file (i.e. one subject's freq results)
     for i = 1:length(SubjectIDs)
         %filename = [ResultsFolder_thisrun files(i).name];
@@ -136,14 +139,20 @@ if ~is_conn
     if (exist(Excel_output_file, 'file') ~= 2)     
         for i = 1:length(SubjectIDs)
             % write the heading (SubjectID + channel labels)
-            filename = [ResultsFolder_thisrun cell2mat(SubjectIDs(i)) '.mat'];
-            SubjectID = ['ID ' filename(end-6:end-4)];
+            %filename = [ResultsFolder_thisrun cell2mat(SubjectIDs(i)) '.mat'];
+            %SubjectID = ['ID ' filename(end-6:end-4)];
+            SubjectID = ['ID ' cell2mat(SubjectIDs(i))];
             writecell([SubjectID 'Freq' allSubjects_freq{i}.label'], Excel_output_file, 'WriteMode','append');
 
             % write the power spectrum matrix for this subject
             M = allSubjects_freq{i}.powspctrm';
-            freq_labels = 1:30;
-            M2 = [NaN(height(M),1) freq_labels' M]; % add an empty col in front, then a second col containing the freq labels (1-30Hz)
+            freq_labels = freq_field;
+            if strcmp(which_project, 'SCI') % for SCI proj, only export certain freqs (coz we computed 6001 freq points: 0:0.005:30)
+                freq_labels = [0.03 0.04 0.05 0.06 1:30];
+                rows = find(ismember(freq_field, freq_labels)); % find the rows to export
+                M = M(rows, :);
+            end
+            M2 = [NaN(height(M),1) freq_labels' M]; % add an empty col in front, then a second col containing the freq labels (e.g. 1-30Hz)
             writematrix(M2, Excel_output_file, 'WriteMode','append');
         end
     end
@@ -194,7 +203,7 @@ if is_conn % for connectivity analysis
     figure;
     cfg           = [];
     cfg.parameter = 'cohspctrm';
-    cfg.xlim      = [2 30]; % we are interested in 2-30Hz (everything else was filtered out)
+    cfg.xlim      = x_limits;
     cfg.zlim      = [0 1];
     ft_connectivityplot(cfg, GA_freq);
 
@@ -217,12 +226,14 @@ if is_conn % for connectivity analysis
     
 else % for standard freq analysis (GA power spectrum & topo for each freq band)
     
-    %load('lay_AntNeuro64.mat');
-    %plot_TFR(GA_freq, lay, save_location, [1 30], true); % include topoplot for infra-slow
-
-    load('lay_NeuroPrax32.mat');
-    plot_TFR(GA_freq, lay, save_location, [2 30], false);
-
+    if strcmp(which_project, 'SCI')
+        load('lay_AntNeuro64.mat');
+        plot_TFR(GA_freq, lay, save_location, x_limits, true); % include topoplot for infra-slow
+    elseif strcmp(which_project, 'migraine')
+        load('lay_NeuroPrax32.mat');
+        plot_TFR(GA_freq, lay, save_location, x_limits, false);
+    end
+    
     % For sanity check: detailed topoplots (at regular freq interval)
     %{
     save_location_detailed = [save_location 'detailed_topoplots\\'];
