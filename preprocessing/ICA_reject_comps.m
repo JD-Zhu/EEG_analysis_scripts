@@ -31,7 +31,10 @@ function [data_clean] = ICA_reject_comps(data, comp, lay, output_path)
     cfg.blocksize = 60; % display 60-sec segments
     cfg.layout   = lay;
     ft_databrowser(cfg, comp);
-    
+
+    set(gcf, 'Position', get(0, 'Screensize')); % make the figure full-screen
+    export_fig(gcf, [output_path 'ICA_comp_waveforms.png']); % save the first screen of the waveform plot
+
     
     %% For quality check: plot the continuous data BEFORE rejecting comps
     cfg          = [];
