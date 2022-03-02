@@ -13,7 +13,7 @@
 common();
 
 % Please specify:
-subj_group = 'migraineurs'; % Options: 'migraineurs', 'controls'
+subj_group = 'controls'; % Options: 'migraineurs', 'controls'
 
 ProjectFolder = 'Z:\Analysis\Judy\EpisodicMigraine\';
 DataFolder = [ProjectFolder 'data\' subj_group '\']; % this directory should contain all the SubjectFolders
@@ -44,7 +44,7 @@ elseif strcmp(subj_group, 'controls')
 end
 
 % or process these new subjects only
-%SubjectIDs = {'Subject_610'};
+SubjectIDs = {'Subject_495', 'Subject_608'}; %846, 640, 631, 629
 
 
 % === Settings ===
@@ -340,6 +340,8 @@ for i = 1:length(SubjectIDs)
             cfg = [];
             cfg.channel = {'M1', 'M2'};
             M1M2_data = ft_selectdata(cfg, alldata);
+            
+            save([output_path 'M1M2_data.mat'], 'M1M2_data', '-v7.3');
         end
         
         
@@ -467,17 +469,17 @@ for i = 1:length(SubjectIDs)
         % https://www.fieldtriptoolbox.org/example/rereference/
         % https://www.fieldtriptoolbox.org/workshop/madrid2019/tutorial_cleaning/
         
-        if strcmp(REREF, 'AR')
-            % re-reference using avg of all channels
+        if strcmp(REREF, 'AR') % re-reference using avg of all channels
             cfg = [];
             cfg.reref      = 'yes';
             %cfg.implicitref = 'CPz'; % add the online ref channel back into the data (will be filled with 0)
             cfg.refchannel = 'all'; % which channels to use for offline reref
             cfg.refmethod  = 'avg';
             alldata = ft_preprocessing(cfg, alldata);
-        elseif strcmp(REREF, 'LM')       
-            % re-reference using linked mastoid (i.e. avg of M1 & M2)  
-            alldata = ft_appenddata([], alldata, M1M2_data); % add M1 & M2 back in first
+        elseif strcmp(REREF, 'LM') % re-reference using linked mastoid (i.e. avg of M1 & M2)  
+            % add M1 & M2 back in first
+            load([output_path 'M1M2_data.mat']);
+            alldata = ft_appenddata([], alldata, M1M2_data);
             
             cfg = [];
             cfg.reref      = 'yes';
@@ -485,6 +487,11 @@ for i = 1:length(SubjectIDs)
             cfg.refchannel = {'M1', 'M2'}; % which channels to use for offline reref
             cfg.refmethod  = 'avg';
             alldata = ft_preprocessing(cfg, alldata);
+                        
+            % remove M1 & M2
+            cfg         = [];
+            cfg.channel = {'all', '-M1', '-M2'};
+            alldata = ft_selectdata(cfg, alldata); 
         end
         
         
@@ -635,7 +642,7 @@ end
 
 
 %% Stage 4: connectivity analysis
-%
+%{
 for i = 1:length(SubjectIDs)
     
     SubjectID = cell2mat(SubjectIDs(i));
@@ -739,3 +746,4 @@ for i = 1:length(SubjectIDs)
         load(S4_output_file);
     end
 end
+%}

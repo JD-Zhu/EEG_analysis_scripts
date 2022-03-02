@@ -26,7 +26,7 @@ SubjectIDs = dir([DataFolder '*_S*']);
 SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
 
 % alternatively: manually specify which subjects to process
-SubjectIDs = {'9003_S1', '9005_S1'};%, '9011_S1'}; % for demo
+SubjectIDs = {'9005_S1'};%, '9011_S1'}; % for demo
 
 
 % === Settings ===
@@ -200,6 +200,8 @@ for i = 1:length(SubjectIDs)
             cfg = [];
             cfg.channel = {'M1', 'M2'};
             M1M2_data = ft_selectdata(cfg, alldata);
+            
+            save([output_path 'M1M2_data.mat'], 'M1M2_data', '-v7.3');
         end
         
         
@@ -325,24 +327,29 @@ for i = 1:length(SubjectIDs)
         % https://www.fieldtriptoolbox.org/example/rereference/
         % https://www.fieldtriptoolbox.org/workshop/madrid2019/tutorial_cleaning/
         
-        if strcmp(REREF, 'AR')
-            % re-reference using avg of all channels
+        if strcmp(REREF, 'AR') % re-reference using avg of all channels
             cfg = [];
             cfg.reref      = 'yes';
             cfg.implicitref = 'CPz'; % add the online ref channel back into the data (will be filled with 0)
             cfg.refchannel = 'all'; % which channels to use for offline reref
             cfg.refmethod  = 'avg';
             alldata = ft_preprocessing(cfg, alldata);
-        elseif strcmp(REREF, 'LM')       
-            % re-reference using linked mastoid (i.e. avg of M1 & M2)  
-            alldata = ft_appenddata([], alldata, M1M2_data); % add M1 & M2 back in first
+        elseif strcmp(REREF, 'LM') % re-reference using linked mastoid (i.e. avg of M1 & M2)  
+            % add M1 & M2 back in first
+            load([output_path 'M1M2_data.mat']);
+            alldata = ft_appenddata([], alldata, M1M2_data);
             
             cfg = [];
             cfg.reref      = 'yes';
             cfg.implicitref = 'CPz'; % add the online ref channel back into the data (will be filled with 0)
             cfg.refchannel = {'M1', 'M2'}; % which channels to use for offline reref
             cfg.refmethod  = 'avg';
-            alldata2 = ft_preprocessing(cfg, alldata);
+            alldata = ft_preprocessing(cfg, alldata);
+            
+            % remove M1 & M2
+            cfg         = [];
+            cfg.channel = {'all', '-M1', '-M2'};
+            alldata = ft_selectdata(cfg, alldata);   
         end
         
         
