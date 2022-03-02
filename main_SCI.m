@@ -26,7 +26,7 @@ SubjectIDs = dir([DataFolder '*_S*']);
 SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
 
 % alternatively: manually specify which subjects to process
-SubjectIDs = {'9005_S1'};%, '9011_S1'}; % for demo
+SubjectIDs = {'9003_S1', '9005_S1'};%, '9011_S1'}; % for demo
 
 
 % === Settings ===
