@@ -76,14 +76,14 @@ function [data_clean] = ICA_reject_comps(data, comp, lay, output_path)
         
         % Let user decide whether they want to retry with diff comps
         prompt = ['\nCompare the datasets with and without IC removal:\n' ...
-            'If it is OK, press Y to continue.\nIf not ok, press N, ' ...
+            'If it is OK, enter Y to continue.\nIf not ok, enter N, ' ...
             'then you will be asked to select the components again.\n\n'];
 
         answer = input(prompt, 's'); % read keyboard input as a string
-        if strcmp(answer, 'N')
-            success = false;
-        else % for any other key press, we treat it as 'Yes'
+        if strcmp(answer, 'Y')
             success = true;
+        else % for any other key press, we treat it as 'No'
+            success = false;
         end
     end
     
