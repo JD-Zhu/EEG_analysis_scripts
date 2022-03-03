@@ -44,7 +44,7 @@ elseif strcmp(subj_group, 'controls')
 end
 
 % or process these new subjects only
-SubjectIDs = {'Subject_495', 'Subject_608'}; %846, 640, 631, 629
+SubjectIDs = {'Subject_608'}; %846, 640, 631, 629
 
 
 % === Settings ===
@@ -311,7 +311,7 @@ for i = 1:length(SubjectIDs)
                 EEG = eeg_checkset( EEG );
             end
             
-            [arft] = mark_artefact(alldata, [-256 256]);
+            [arft] = mark_artefact(alldata, [-180 180]);
             
             if ~BROWSING_WITHOUT_SAVE
                 save(output_file, 'arft', '-v7.3');
