@@ -66,7 +66,7 @@ if strcmp(which_project, 'migraine')
     freq_field = 1:30; % for fixing up the freq field (for some reason the freq values are not whole numbers)
 elseif strcmp(which_project, 'SCI')
     x_limits = [1 30]; % anything below 1Hz is way over powered (rendering the whole plot unviewable)
-    freq_field = 0:0.005:30;
+    freq_field = 0:0.01:30;
 end
 
 

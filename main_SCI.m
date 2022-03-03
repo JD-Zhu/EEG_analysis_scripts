@@ -471,8 +471,8 @@ for i = 1:length(SubjectIDs)
         cfg.channel = 'all';
         cfg.method  = 'mtmfft';
         cfg.taper   = 'boxcar';
-        cfg.foi     = 0:0.005:30; % 1 / cfg1.length = 0.25 (the longer the segments, the more reso we can have here)
-                                  % so for a reso of 0.005Hz, we need at least 1 segment with a length of 1 / 0.005 = 200 seconds
+        cfg.foi     = 0:0.01:30; % 1 / cfg1.length = 0.25 (the longer the segments, the more reso we can have here)
+                                  % so for a reso of 0.01Hz, we need at least 1 segment with a length of 1 / 0.01 = 100 seconds
         freq         = ft_freqanalysis(cfg, all_blocks);
 
         freq.freq   = cfg.foi; % for some reason the "freq" field contains non-whole numbers, fix it manually
