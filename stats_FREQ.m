@@ -148,7 +148,7 @@ if ~is_conn
             M = allSubjects_freq{i}.powspctrm';
             freq_labels = freq_field;
             if strcmp(which_project, 'SCI') % for SCI proj, only export certain freqs (coz we computed 6001 freq points: 0:0.005:30)
-                freq_labels = [0.1:0.1:0.9 1:30];
+                freq_labels = [0.02:0.01:0.09 0.1:0.1:0.9 1:30];
                 rows = find(ismembertol(freq_field, freq_labels, 1e-4)); % find the rows to export (comparing floating point numbers is tricky, so we add a small tolerance to make sure they can be matched up)
                 M = M(rows, :);
             end
