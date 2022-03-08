@@ -116,9 +116,9 @@ function [] = common()
                                     % 0.1+-0.1Hz seems to work well for the SCI project (whereas wider transition bands caused too many slow drift components)
     CHANNEL_REPAIR = true; % interpolate rejected channels? 
                            % must set to true if using "average reference", as channel rejection leads to unbalanced reref
+    DOWNSAMPLE = 200; % SCI project: sampling rate was 1000Hz, best to use a divisor of it (200Hz is commonly used)
     DO_BEH_CHECK = false; % if subjects produced beh responses, set this to true
     DO_PCA = false; % if subjects produced vocal responses, set this to true
-    DOWNSAMPLE = 200; % SCI project: sampling rate was 1000Hz, best to use a divisor of it (200Hz is commonly used)
     
     % when running many subjects in one batch, process all auto steps until the next manual step
     global RUN_UP_TO_BEFORE_MANUAL_ARTEFACT; global RUN_UP_TO_AFTER_MANUAL_ARTEFACT; 

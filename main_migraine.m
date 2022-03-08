@@ -9,15 +9,16 @@
 
 % run the #define section
 global DataFolder; global SUBJ_GROUP; global SubjectIDs; global CONFILE_NAME; 
-global REREF; global APPLY_SL; global run_name; global file_suffix;
-global output_name; global ResultsFolder_thisrun; global ResultsFolder_conn_thisrun;
 global LAYOUT_FILE; global NEIGHBOURS_FILE; global ALL_LABELS_FILE; global ELEC_FILE;
+global ONLINE_REF; global REREF; global APPLY_SL; global run_name; global file_suffix;
+global output_name; global ResultsFolder_thisrun; global ResultsFolder_conn_thisrun;
+global S1_output_filename; global S3_output_filename; global S4_output_filename;
 global DO_HPF; global FILTERS; global PLOT_CHANNEL_SPECTRA; 
 global DO_ICA; global FILTER_AGAIN_BEFORE_ICA; global FILTERS_for_ICA; 
-global CHANNEL_REPAIR; global DO_BEH_CHECK; global DO_PCA; global DOWNSAMPLE; 
+global CHANNEL_REPAIR; global DOWNSAMPLE; %global DO_BEH_CHECK; global DO_PCA;
 global RUN_UP_TO_BEFORE_MANUAL_ARTEFACT; global RUN_UP_TO_AFTER_MANUAL_ARTEFACT; 
 global RUN_UP_TO_ICA; global RUN_UP_TO_ICA_REJECTION; global BROWSING_WITHOUT_SAVE;
-global S1_output_filename; global S3_output_filename; global S4_output_filename;
+global ANALYSE_ISO; global EPISODIC_ONLY;
 % global colours;
 common();
 

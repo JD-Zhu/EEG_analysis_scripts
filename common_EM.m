@@ -126,9 +126,9 @@ function [] = common()
     %HPF_for_ICA = [1 2 FILTERS(3) FILTERS(4)]; % n/a
     CHANNEL_REPAIR = true; % interpolate rejected channels? 
                            % must set to true if using "average reference", as channel rejection leads to unbalanced reref
+    DOWNSAMPLE = 250; % old episodic migraine data: sampling rate was 500Hz, best to use a divisor of it (~200Hz is commonly used)
     DO_BEH_CHECK = false; % if subjects produced beh responses, set this to true
     DO_PCA = false; % if subjects produced vocal responses, set this to true
-    DOWNSAMPLE = 250; % old episodic migraine data: sampling rate was 500Hz, best to use a divisor of it (~200Hz is commonly used)
 
     % when running many subjects in one batch, process all auto steps until the next manual step
     global RUN_UP_TO_BEFORE_MANUAL_ARTEFACT; global RUN_UP_TO_AFTER_MANUAL_ARTEFACT; 
