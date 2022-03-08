@@ -13,8 +13,9 @@ function [] = common()
     
     % 1. Location for your EEG data analysis 
     % (use absolute paths, to avoid any issues when we 'cd' into diff folders)
-    global ProjectFolder; global SUBJ_GROUP;
     ProjectFolder = 'Z:\Analysis\Preprocess\NeuRA_SCI_SCS_CIPN_BUMP\EEG\';
+    
+    global SUBJ_GROUP;
     SUBJ_GROUP = 'controls'; % Options: 'patients', 'controls'    
     
     global DataFolder;   
@@ -160,7 +161,22 @@ function [] = common()
     end
     
     
-    % (2) exporting to excel
+    % (2) specify a list of subjects to compute GA on
+    
+    % this can be subjects belonging to a particular sub-group (e.g. prodromes / postdromes / interictals) - see common_EM for examples,
+    % or leave empty to use all subjects in the ResultsFolder (i.e. all patients / all controls)
+    global SubjectIDs_GA;
+    SubjectIDs_GA = [];
+
+    % if subject list is empty, then use all results files in the folder
+    if isempty(SubjectIDs_GA)
+        SubjectIDs_GA = dir([ResultsFolder_thisrun '*.mat']);
+        SubjectIDs_GA = {SubjectIDs_GA.name}; % extract the names into a cell array
+        SubjectIDs_GA = cellfun(@(x) x(1:end-4), SubjectIDs_GA, 'un', 0); % remove the '.mat' extension
+    end
+
+    
+    % (3) exporting to excel
     global FREQ_FIELD; % for fixing up the "freq" field in results (for some reason the freqs are not whole numbers)
     global FREQS_TO_EXPORT; % if analysing ISO, only export certain freqs to excel (coz we computed 3001 freq points: 0:0.01:30)
     

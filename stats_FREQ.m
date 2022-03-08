@@ -10,39 +10,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-% NOTE - currently in the process of migrating all the settings to common.m,
-% so some of the constants (e.g. SubjectIDs) are still being set within this script!
-
-global SUBJ_GROUP; global ResultsFolder_thisrun;
+global SubjectIDs_GA; global ResultsFolder_thisrun; global LAYOUT_FILE; 
 global ANALYSE_ISO; global PLOT_XLIM; global FREQ_FIELD; global FREQS_TO_EXPORT; 
 global is_conn;
 common();
 
-
-% can specify a subset of subjects to use,
-% or leave empty (to use all subjs in the folder)
-SubjectIDs = [];
-% Episodic migraine proj - final set of 17 controls (age & gender matched to migraineurs)
-%SubjectIDs = {'Subject_101', 'Subject_251', 'Subject_252', 'Subject_253', 'Subject_254', 'Subject_495', 'Subject_610', 'Subject_622', 'Subject_623', 'Subject_634', 'Subject_642', 'Subject_675', 'Subject_690', 'Subject_809', 'Subject_844', 'Subject_885', 'Subject_891'};
-% Groups based on migraine phases:
-%SubjectIDs = {'Subject_500', 'Subject_548', 'Subject_208'}; % prodrome
-%SubjectIDs = {'Subject_583', 'Subject_673', 'Subject_680', 'Subject_205'}; % postdrome
-%SubjectIDs = {'Subject_661', 'Subject_664', 'Subject_671', 'Subject_677', 'Subject_681', 'Subject_696', 'Subject_800', 'Subject_207', 'Subject_209', 'Subject_210'}; % interictal
-% Groups based on migraine frequency:
-%SubjectIDs = {'Subject_677', 'Subject_681', 'Subject_696', 'Subject_800'}; % <1 day / month
-%SubjectIDs = {'Subject_583', 'Subject_661', 'Subject_671'}; % 1-2 days / month
-%SubjectIDs = {'Subject_500', 'Subject_548', 'Subject_664', 'Subject_673', 'Subject_680'}; % >3 days / month
-
-% if subject list is empty, then use all results files in the folder
-if isempty(SubjectIDs)
-    SubjectIDs = dir([ResultsFolder_thisrun '*.mat']);
-    SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
-    SubjectIDs = cellfun(@(x) x(1:end-4), SubjectIDs, 'un', 0); % remove the '.mat' extension
-end
-
-
 % location to save the GA & figures
-save_location = [ResultsFolder_thisrun 'GA_' SUBJ_GROUP '\'];
+save_location = [ResultsFolder_thisrun 'GA\'];
 mkdir(save_location);
 
 
@@ -55,9 +29,9 @@ if ~is_conn
     figure; hold on;
     
     % each cycle reads in one '.mat' file (i.e. one subject's freq results)
-    for i = 1:length(SubjectIDs)
+    for i = 1:length(SubjectIDs_GA)
         %filename = [ResultsFolder_thisrun files(i).name];
-        filename = [ResultsFolder_thisrun cell2mat(SubjectIDs(i)) '.mat'];
+        filename = [ResultsFolder_thisrun cell2mat(SubjectIDs_GA(i)) '.mat'];
 
         load(filename);
 
@@ -79,7 +53,7 @@ if ~is_conn
     hold off;
 
     % save the plot
-    export_fig(gcf, [save_location 'overall_power_' int2str(length(SubjectIDs)) 'subj.png']); % use this tool to save the figure exactly as shown on screen
+    export_fig(gcf, [save_location 'overall_power_' int2str(length(SubjectIDs_GA)) 'subj.png']); % use this tool to save the figure exactly as shown on screen
 end
 
 
@@ -88,8 +62,8 @@ end
 allSubjects_freq = {};
 
 % each cycle reads in one '.mat' file (i.e. one subject's freq results)
-for i = 1:length(SubjectIDs)
-    filename = [ResultsFolder_thisrun cell2mat(SubjectIDs(i)) '.mat'];
+for i = 1:length(SubjectIDs_GA)
+    filename = [ResultsFolder_thisrun cell2mat(SubjectIDs_GA(i)) '.mat'];
     load(filename);
     
     % add to cell array
@@ -113,11 +87,11 @@ save([save_location 'allSubjects_freq.mat'], 'allSubjects_freq');
 if ~is_conn
     Excel_output_file = [save_location 'summary.xls'];
     if (exist(Excel_output_file, 'file') ~= 2)     
-        for i = 1:length(SubjectIDs)
+        for i = 1:length(SubjectIDs_GA)
             % write the heading (SubjectID + channel labels)
             %filename = [ResultsFolder_thisrun cell2mat(SubjectIDs(i)) '.mat'];
             %SubjectID = ['ID ' filename(end-6:end-4)];
-            SubjectID = ['ID ' cell2mat(SubjectIDs(i))];
+            SubjectID = ['ID ' cell2mat(SubjectIDs_GA(i))];
             writecell([SubjectID 'Freq' allSubjects_freq{i}.label'], Excel_output_file, 'WriteMode','append');
 
             % write the power spectrum matrix for this subject

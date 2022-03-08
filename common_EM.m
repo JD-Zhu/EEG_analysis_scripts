@@ -13,8 +13,9 @@ function [] = common()
     
     % 1. Location for your EEG data analysis 
     % (use absolute paths, to avoid any issues when we 'cd' into diff folders)
-    global ProjectFolder; global SUBJ_GROUP;
     ProjectFolder = 'Z:\Analysis\Judy\EpisodicMigraine\';
+    
+    global SUBJ_GROUP;
     SUBJ_GROUP = 'controls'; % Options: 'patients', 'controls'    
     
     global DataFolder;   
@@ -175,7 +176,32 @@ function [] = common()
     end
     
     
-    % (2) exporting to excel
+    % (2) specify a list of subjects to compute GA on
+    
+    % this can be subjects belonging to a particular sub-group (e.g. prodromes / postdromes / interictals),
+    % or leave empty to use all subjects in the ResultsFolder (i.e. all patients / all controls)
+    global SubjectIDs_GA;
+    SubjectIDs_GA = [];
+    % Episodic migraine proj - final set of 17 controls (age & gender matched to migraineurs)
+    %SubjectIDs = {'Subject_101', 'Subject_251', 'Subject_252', 'Subject_253', 'Subject_254', 'Subject_495', 'Subject_610', 'Subject_622', 'Subject_623', 'Subject_634', 'Subject_642', 'Subject_675', 'Subject_690', 'Subject_809', 'Subject_844', 'Subject_885', 'Subject_891'};
+    % Groups based on migraine phases:
+    %SubjectIDs = {'Subject_500', 'Subject_548', 'Subject_208'}; % prodrome
+    %SubjectIDs = {'Subject_583', 'Subject_673', 'Subject_680', 'Subject_205'}; % postdrome
+    %SubjectIDs = {'Subject_661', 'Subject_664', 'Subject_671', 'Subject_677', 'Subject_681', 'Subject_696', 'Subject_800', 'Subject_207', 'Subject_209', 'Subject_210'}; % interictal
+    % Groups based on migraine frequency:
+    %SubjectIDs = {'Subject_677', 'Subject_681', 'Subject_696', 'Subject_800'}; % <1 day / month
+    %SubjectIDs = {'Subject_583', 'Subject_661', 'Subject_671'}; % 1-2 days / month
+    %SubjectIDs = {'Subject_500', 'Subject_548', 'Subject_664', 'Subject_673', 'Subject_680'}; % >3 days / month
+
+    % if subject list is empty, then use all results files in the folder
+    if isempty(SubjectIDs_GA)
+        SubjectIDs_GA = dir([ResultsFolder_thisrun '*.mat']);
+        SubjectIDs_GA = {SubjectIDs_GA.name}; % extract the names into a cell array
+        SubjectIDs_GA = cellfun(@(x) x(1:end-4), SubjectIDs_GA, 'un', 0); % remove the '.mat' extension
+    end
+
+    
+    % (3) exporting to excel
     global FREQ_FIELD; % for fixing up the "freq" field in results (for some reason the freqs are not whole numbers)
     global FREQS_TO_EXPORT; % if analysing ISO, only export certain freqs to excel (coz we computed 3001 freq points: 0:0.01:30)
     

@@ -14,6 +14,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+global LAYOUT_FILE; global NEIGHBOURS_FILE; global PLOT_XLIM;
+common();
+
+load(LAYOUT_FILE);
+
+
 % = Settings =
 
 % Run t-tests using equal variance (i.e. pooled) or unequal variance? (p-values obtained were similar)
@@ -44,8 +50,6 @@ mig_indi = GA_freq_indi;
 load([controls_folder 'GA_individuals.mat']);
 ctrl_indi = GA_freq_indi;
 
-load('lay_NeuroPrax32.mat');
-
 
 % apply log transformation if needed & set appropriate file paths
 if logged
@@ -59,6 +63,7 @@ else
     logged_suffix = '';
 end
 
+
 % locations to save results
 stats_folder_indi_chan = [stats_folder 'indi-chan-analysis\'];
 mkdir(stats_folder_indi_chan);
@@ -67,13 +72,13 @@ mkdir(stats_folder_cluster);
 
 
 %% plot overall power (mig vs ctrl)
-x_limits = [2 30];
+PLOT_XLIM = [2 30];
 
 figure; hold on;
 plot(mig_avg.freq, mean(mig_avg.powspctrm));
 plot(ctrl_avg.freq, mean(ctrl_avg.powspctrm));
 
-xlim(x_limits);
+xlim(PLOT_XLIM);
 xlabel('Frequency (Hz)');
 ylabel('Absolute power (uV^2)');
 legend({'Migraineurs', 'Controls'});
@@ -86,7 +91,7 @@ figure; hold on;
 plot(mig_avg.freq, mean(log(mig_avg.powspctrm)));
 plot(ctrl_avg.freq, mean(log(ctrl_avg.powspctrm)));
 
-xlim(x_limits);
+xlim(PLOT_XLIM);
 xlabel('Frequency (Hz)');
 ylabel('Power (log[uV^2]');
 legend({'Migraineurs', 'Controls'});
@@ -206,7 +211,7 @@ mig = allSubjects_freq;
 load([controls_folder 'allSubjects_freq.mat']);
 ctrl = allSubjects_freq;
 
-load('neighbours_NeuroPrax32.mat'); % obtained using 'triangulation' method in ft_prepare_neighbour
+load(NEIGHBOURS_FILE); % obtained using 'triangulation' method in ft_prepare_neighbour
 
 if logged % using logged power
     for i = 1:length(mig)
