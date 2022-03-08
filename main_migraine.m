@@ -8,121 +8,28 @@
 %clear all % disable this line if u want breakpoints to work
 
 % run the #define section
-%global DataFolder; global ResultsFolder; 
-% global EEG_chans; global colours;
+global DataFolder; global SUBJ_GROUP; global SubjectIDs; global CONFILE_NAME; 
+global REREF; global APPLY_SL; global run_name; global file_suffix;
+global output_name; global ResultsFolder_thisrun; global ResultsFolder_conn_thisrun;
+global LAYOUT_FILE; global NEIGHBOURS_FILE; global ALL_LABELS_FILE; global ELEC_FILE;
+global DO_HPF; global FILTERS; global PLOT_CHANNEL_SPECTRA; 
+global DO_ICA; global FILTER_AGAIN_BEFORE_ICA; global FILTERS_for_ICA; 
+global CHANNEL_REPAIR; global DO_BEH_CHECK; global DO_PCA; global DOWNSAMPLE; 
+global RUN_UP_TO_BEFORE_MANUAL_ARTEFACT; global RUN_UP_TO_AFTER_MANUAL_ARTEFACT; 
+global RUN_UP_TO_ICA; global RUN_UP_TO_ICA_REJECTION; global BROWSING_WITHOUT_SAVE;
+global S1_output_filename; global S3_output_filename; global S4_output_filename;
+% global colours;
 common();
 
-% Please specify:
-subj_group = 'controls'; % Options: 'migraineurs', 'controls'
-
-ProjectFolder = 'Z:\Analysis\Judy\EpisodicMigraine\';
-DataFolder = [ProjectFolder 'data\' subj_group '\']; % this directory should contain all the SubjectFolders
-ResultsFolder = [ProjectFolder 'results\' subj_group '\']; % all subjects' freq analysis results will be stored here
-ResultsFolder_conn = [ProjectFolder 'results_conn\' subj_group '\']; % all subjects' connectivity results will be stored here
-    
-% find all subject folders containing raw EEG recordings
-SubjectIDs = dir([DataFolder 'Subject*']);
-SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
-
-% alternatively: manually specify which subjects to process
-migraineurs_12 = {'Subject_500', 'Subject_548', 'Subject_583', 'Subject_661', ...
-            'Subject_664', 'Subject_671', 'Subject_673', 'Subject_677', ...
-            'Subject_680', 'Subject_681', 'Subject_696', 'Subject_800'};
-migraineurs_new5 = {'Subject_205', 'Subject_207', 'Subject_208', 'Subject_209', 'Subject_210'};
-controls_12 = {'Subject_101', 'Subject_495', 'Subject_622', 'Subject_624', ...
-            'Subject_634', 'Subject_642', 'Subject_675', 'Subject_690', ...
-            'Subject_809', 'Subject_885', 'Subject_886', 'Subject_891'};
-controls_13_remaining = {'Subject_608', 'Subject_610', 'Subject_613', 'Subject_623', ...
-                'Subject_629', 'Subject_631', 'Subject_640', 'Subject_645', ...
-                'Subject_682', 'Subject_804', 'Subject_808', 'Subject_844', 'Subject_846'};
-controls_4new = {'Subject_251', 'Subject_252', 'Subject_253', 'Subject_254'};
-            
-if strcmp(subj_group, 'migraineurs')
-    SubjectIDs = [migraineurs_12 migraineurs_new5];
-elseif strcmp(subj_group, 'controls')
-    SubjectIDs = [controls_12 controls_13_remaining controls_4new];
-end
-
-% or process these new subjects only
-SubjectIDs = {'Subject_608'}; %846, 640, 631, 629
-
-
-% === Settings ===
-
-% Please adjust as required:
-
-% offline rereferencing using "average reference" or "linked mastoid"?
-REREF = 'AR'; % we don't have M1 M2 for these data, so just use avg ref
-
-% create a name for this run (this will create a separate output & Figures folder)
-run_name = '_EC_LPF30'; % '_EO';
-file_suffix = ''; % '_minReject': only reject a noisy chan if it's utterly crazy - keep where possible (note: all flat channels must still be rejected)
-
-if strcmp(REREF, 'LM')
-   run_name = [run_name '_LMref']; 
-end
-output_name = ['output' run_name '\\']; % location to save intermediate output files inside each SubjectFolder
-
-% For connectivity analysis ONLY - apply surface Laplacian to deal with volumn conduction issue?
-APPLY_SL = false;
-            
 % location to save the results for all subjects
-temp_name = run_name(2:end);
-if isempty(temp_name)
-    temp_name = 'full';
-end
-
-ResultsFolder_thisrun = [ResultsFolder temp_name '\\'];
 mkdir(ResultsFolder_thisrun);
-
-if APPLY_SL
-    ResultsFolder_conn_thisrun = [ResultsFolder_conn temp_name '_afterSL\\'];
-else
-    ResultsFolder_conn_thisrun = [ResultsFolder_conn temp_name '\\'];
-end
 mkdir(ResultsFolder_conn_thisrun);
 
-% name of confile in the SubjectFolder (can use wildcards)
-confile_name = '*\*.edf';
-
-% which steps to run?
-DO_HPF = true;
-DO_ICA = false; % if we tested human subjects (i.e. not "dry run"), set this to true
-RUN_ICA_ON_1HZ_FILTERED_DATA = false; % this dataset is already HPF'd at 1Hz, no need to filter again before ICA
-DO_BEH_CHECK = false; % if subjects produced beh responses, set this to true
-DO_PCA = false; % if subjects produced vocal responses, set this to true
-
-% when running many subjects in one batch, process all auto steps until the first manual step
-RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = false;   % auto processing before 1st manual step
-RUN_UP_TO_AFTER_MANUAL_ARTEFACT = false;    % perform 1st manual step (mark artefact)
-RUN_UP_TO_ICA = false;                      % auto processing before 2nd manual step (ICA component analysis)
-RUN_UP_TO_ICA_REJECTION = false;            % perform 2nd manual step (select ICA comps to reject)
-BROWSING_WITHOUT_SAVE = false;              % browse filtered data - do not save arft & selChLabels
-
-% > other options:
-PLOT_CHANNEL_SPECTRA = false; % during initial data inspection, plot channel spectra to help with determining bad channels?
-                             % (this functionality requires EEGLAB)
-                             % Note: channel spectra is plotted on raw data (i.e. before filtering)
-CHANNEL_REPAIR = true; % interpolate rejected channels? 
-                       % set this to true if using "average reference", as channel rejection leads to unbalanced reref
-%CALC_UNCLEANED_ERF = false; % calculate uncleaned erf? (for quality check of response-component rejection)
-
-    
-% =================
-
-% set filenames for saving the output from each stage (so that we don't have to rerun the whole thing from beginning every time)
-S1_output_filename = ['S1_preprocessed_data' file_suffix '.mat']; % Stage 1 output (stored inside each Subject folder)
-%S2_output_filename = 'S2_after_visual_rejection.mat'; % Stage 2 output (stored inside each Subject folder)
-S3_output_filename = [file_suffix '.mat']; % Final output for freq analysis (stored in ResultsFolder for all subjects)
-S4_output_filename = [file_suffix '.mat']; % Final output for connectivity analysis (stored in ResultsFolder_conn for all subjects)
-
-
-% load our custom-made layout & neighbours
-% made by: prepare_layout_and_neighbours.m
-load('lay_NeuroPrax32.mat');
+% load layout & neighbours
+load(LAYOUT_FILE); % use our custom-made layout & neighbours
 %figure; ft_plot_layout(lay);
-load('neighbours_NeuroPrax32.mat');
-load('all_labels_NeuroPrax32.mat'); % list of real EEG channels (i.e. excluding EOG & ref channels)        
+load(NEIGHBOURS_FILE);
+load(ALL_LABELS_FILE); % list of real EEG channels (i.e. excluding EOG & ref chans): 61 chans for AntNeuro, 27 chans for NeuroPrax
 
 % start EEGLAB if needed
 if PLOT_CHANNEL_SPECTRA
@@ -160,7 +67,7 @@ for i = 1:length(SubjectIDs)
         
         
         % get the eeg data file name 
-        files = dir(fullfile(SubjectFolder, confile_name));
+        files = dir(fullfile(SubjectFolder, CONFILE_NAME));
         rawfile = fullfile(files(1).folder, files(1).name);
 
         
@@ -189,12 +96,9 @@ for i = 1:length(SubjectIDs)
             cfg.demean     = 'yes';
             cfg.detrend    = 'no';
             cfg.continuous = 'yes';
-            alldata = ft_preprocessing(cfg);            
+            alldata = ft_preprocessing(cfg);                       
             
-            
-            % Specify filtering settings here:
-            %[alldata] = filtering(alldata, DO_HPF, 1, 2, 60, 20); % HPF 1+-1Hz; LPF 60+-10Hz
-            [alldata] = filtering(alldata, DO_HPF, 1, 2, 35, 10); % HPF 1+-1Hz; LPF 35+-5Hz
+            [alldata] = filtering(alldata, DO_HPF, FILTERS);
             
             % save now, because the 0.01Hz HPF TAKES FOREVER to run!
             if (DO_HPF) % to save disk space, only save if we did HPF
@@ -251,13 +155,13 @@ for i = 1:length(SubjectIDs)
         % separate files, and each file is 15mins - we manually select the
         % best 5mins by marking the rest as artefact)
         if ~strcmp(SubjectID(1:9), 'Subject_2') % Subject_2xx would be Bec's data
-            if strcmp(subj_group, 'migraineurs') % for migraineurs, all subjects had the same timing
+            if strcmp(SUBJ_GROUP, 'patients') % for migraineurs, all subjects had the same timing
                 if strcmp(run_name(1:3), '_EC')
                     latency = [0 290]; % EC: 0 - 290 sec
                 elseif strcmp(run_name(1:3), '_EO')
                     latency = [300 10000]; % EO: from 300 sec onwards
                 end
-            elseif strcmp(subj_group, 'controls') % for controls, look up the timing we manually created and saved for each subject
+            elseif strcmp(SUBJ_GROUP, 'controls') % for controls, look up the timing we manually created and saved for each subject
                 load([SubjectFolder 'EC_EO_timing.mat']);
                 if strcmp(run_name(1:3), '_EC')
                     latency = EC_EO_timing.EC;
@@ -392,9 +296,9 @@ for i = 1:length(SubjectIDs)
                 output_file_ICA = [output_path 'ICA_comps.mat'];        
                 if (exist(output_file_ICA, 'file') ~= 2)    
                     
-                    if (RUN_ICA_ON_1HZ_FILTERED_DATA) % apply 1Hz HPF before running ICA
-                        [comp] = ICA_run(true, rawfile, arft, selChLabel);
-                    else % directly run ICA without applying 1Hz HPF
+                    if (FILTER_AGAIN_BEFORE_ICA) % apply another HPF before running ICA
+                        [comp] = ICA_run(true, FILTERS_for_ICA, rawfile, arft, selChLabel);
+                    else % directly run ICA without applying another HPF
                         [comp] = ICA_run(false, alldata);
                     end
 
@@ -438,7 +342,7 @@ for i = 1:length(SubjectIDs)
         if (CHANNEL_REPAIR)
             % add "elec" field to the data struct (needed for channel repair)
             %elec = ft_read_sens(rawfile, 'senstype','eeg', 'fileformat','easycap_txt');
-            load('elec_NeuroPrax32.mat'); % just load the version we have already made
+            load(ELEC_FILE); % just load the version we have already made
             alldata.elec = elec;
             
             alldata = repair_bad_channels(alldata, neighbours, all_labels);
@@ -472,9 +376,11 @@ for i = 1:length(SubjectIDs)
         if strcmp(REREF, 'AR') % re-reference using avg of all channels
             cfg = [];
             cfg.reref      = 'yes';
-            %cfg.implicitref = 'CPz'; % add the online ref channel back into the data (will be filled with 0)
             cfg.refchannel = 'all'; % which channels to use for offline reref
             cfg.refmethod  = 'avg';
+            if ~isempty(ONLINE_REF)
+                cfg.implicitref = ONLINE_REF; % add the online ref channel back into the data (will be filled with 0)
+            end
             alldata = ft_preprocessing(cfg, alldata);
         elseif strcmp(REREF, 'LM') % re-reference using linked mastoid (i.e. avg of M1 & M2)  
             % add M1 & M2 back in first
@@ -483,9 +389,11 @@ for i = 1:length(SubjectIDs)
             
             cfg = [];
             cfg.reref      = 'yes';
-            %cfg.implicitref = 'CPz'; % add the online ref channel back into the data (will be filled with 0)
             cfg.refchannel = {'M1', 'M2'}; % which channels to use for offline reref
             cfg.refmethod  = 'avg';
+            if ~isempty(ONLINE_REF)
+                cfg.implicitref = ONLINE_REF; % add the online ref channel back into the data (will be filled with 0)
+            end
             alldata = ft_preprocessing(cfg, alldata);
                         
             % remove M1 & M2
@@ -494,14 +402,18 @@ for i = 1:length(SubjectIDs)
             alldata = ft_selectdata(cfg, alldata); 
         end
         
+        all_blocks = alldata;
+        
         
         % >>>
         % Step 8: downsample the data for saving
-        %all_blocks.time(1:end) = all_blocks.time(1); % this avoids numeric round off issues in the time axes upon resampling
-        cfg            = [];
-        cfg.resamplefs = 250; % sampling freq was 500Hz, best to use a divisor of it (~200Hz is commonly used)
-        cfg.detrend    = 'no';
-        all_blocks     = ft_resampledata(cfg, alldata);
+        if DOWNSAMPLE ~= 0
+            %all_blocks.time(1:end) = all_blocks.time(1); % this avoids numeric round off issues in the time axes upon resampling
+            cfg            = [];
+            cfg.resamplefs = DOWNSAMPLE; 
+            cfg.detrend    = 'no';
+            all_blocks     = ft_resampledata(cfg, all_blocks);
+        end
 
         % SAVE preprocessed data - takes a while!!
         %save(S1_output_file, 'all_blocks', 'trialinfo_b', '-v7.3');

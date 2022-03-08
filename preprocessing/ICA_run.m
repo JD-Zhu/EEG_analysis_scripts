@@ -1,23 +1,24 @@
 % Run ICA to identify eye blinks & other large muscle artefacts 
 % (e.g. jaw clenching, hand movements)
 %
-% @param filter_first - run ICA on 1Hz-filtered data (usually applicable to EEG data,
+% @param filter_first - do another HPF before running ICA (usually applicable to EEG data,
 %                       which has fewer channels, e.g. 32-channel. If you don't filter at 1Hz first,
-%                       slow waves will take up too many comps & you might not get a comp for eye blinks)
-% if yes: then need to supply these arguments: rawfile, arft, selChLabel
-%       e.g. [comp] = ICA_run(true, rawfile, arft, selChLabel);
+%                       slow waves could take up too many comps & you might not get a good comp for eye blinks)
+% if yes: then need to supply these arguments: filters (hpfreq, hpfiltdf, lpfreq, lpfiltdf), rawfile, arft, selChLabel
+%       e.g. [comp] = ICA_run(true, [0.1 0.2 35 10], rawfile, arft, selChLabel);
 % if no:  then need to supply this argument: alldata
 %       e.g. [comp] = ICA_run(false, alldata);
 
 function [comp] = ICA_run(filter_first, varargin)
 
-    %% prep the data for ICA (apply 1Hz HPF if need to) 
+    %% prep the data for ICA (apply another HPF if need to) 
     if (filter_first)
-        fprintf(['\nWill run ICA on 1Hz-filtered data\n']); 
+        filters         = varargin{1};
+        rawfile         = varargin{2};
+        arft            = varargin{3};
+        selChLabel      = varargin{4};
         
-        rawfile    = varargin{1};
-        arft       = varargin{2};
-        selChLabel = varargin{3};
+        fprintf(['\nWill run ICA on ' num2str(filters(1)) 'Hz-filtered data\n']); 
         
         hdr = ft_read_header(rawfile, 'dataformat','yokogawa_con'); % read header file
     
@@ -28,8 +29,8 @@ function [comp] = ICA_run(filter_first, varargin)
         cfg.continuous              = 'yes';
         cfg.hpfilter                = 'yes';
         cfg.hpfilttype              = 'firws';
-        cfg.hpfreq                  = 0.1; % changed to 0.1Hz coz 1Hz actually removed most eye artefacts PRIOR TO ICA (0.5Hz removed quite a lot too)
-        cfg.hpfiltdf                = 0.2; % if ICA quality is not good (ie. too many slow drift components), try 0.2-0.3Hz!
+        cfg.hpfreq                  = filters(1);
+        cfg.hpfiltdf                = filters(2);
         cfg.hpfiltwintype           = 'blackman';
         cfg.hpfiltdir               = 'onepass-zerophase';
         %cfg.dftfreq                 = 50; % removal line noise
@@ -43,8 +44,8 @@ function [comp] = ICA_run(filter_first, varargin)
         cfg         = [];
         cfg.lpfilter   = 'yes';
         cfg.lpfilttype = 'firws';
-        cfg.lpfreq     = 35; % 35 +- 5Hz
-        cfg.lpfiltdf   = 10; % wider transition window means it will run much faster
+        cfg.lpfreq     = filters(3);
+        cfg.lpfiltdf   = filters(4);
         cfg.lpfiltwintype = 'blackman';
         cfg.lpfiltdir  = 'onepass-zerophase';
         data4ICA = ft_preprocessing(cfg, data4ICA);

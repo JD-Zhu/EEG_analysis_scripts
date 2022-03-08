@@ -8,87 +8,30 @@
 %clear all % disable this line if u want breakpoints to work
 
 % run the #define section
-%global DataFolder; global ResultsFolder; 
-% global EEG_chans; global colours;
+global DataFolder; global SUBJ_GROUP; global SubjectIDs; global CONFILE_NAME; 
+global REREF; global APPLY_SL; global run_name; global file_suffix;
+global output_name; global ResultsFolder_thisrun; global ResultsFolder_conn_thisrun;
+global LAYOUT_FILE; global NEIGHBOURS_FILE; global ALL_LABELS_FILE; global ELEC_FILE;
+global DO_HPF; global FILTERS; global PLOT_CHANNEL_SPECTRA; 
+global DO_ICA; global FILTER_AGAIN_BEFORE_ICA; global FILTERS_for_ICA; 
+global CHANNEL_REPAIR; global DO_BEH_CHECK; global DO_PCA; global DOWNSAMPLE; 
+global RUN_UP_TO_BEFORE_MANUAL_ARTEFACT; global RUN_UP_TO_AFTER_MANUAL_ARTEFACT; 
+global RUN_UP_TO_ICA; global RUN_UP_TO_ICA_REJECTION; global BROWSING_WITHOUT_SAVE;
+global S1_output_filename; global S3_output_filename; global S4_output_filename;
+% global colours;
 common();
 
-% Please specify:
-ProjectFolder = 'Z:\Analysis\Preprocess\NeuRA_SCI_SCS_CIPN_BUMP\EEG\';
-DataFolder = [ProjectFolder 'data\']; % this directory should contain all the SubjectFolders
-ResultsFolder = [ProjectFolder 'results\']; % all subjects' freq analysis results will be stored here
-ResultsFolder_conn = [ProjectFolder 'results_conn\']; % all subjects' connectivity results will be stored here
-        
-% find all subject folders containing raw EEG recording
-SubjectIDs = dir([DataFolder '*_S*']);
-%SubjectIDs = [dir([DataFolder 'A*']); dir([DataFolder 'B*'])];
-%SubjectIDs = SubjectIDs([2 3 6]); % only process selected subjects
-%SubjectIDs([2 13 25]) = []; % remove certain subjects from the list
-SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
-
-% alternatively: manually specify which subjects to process
-SubjectIDs = {'9003_S1', '9005_S1'};%, '9011_S1'}; % for demo
-
-
-% === Settings ===
-
-% Please adjust as required:
-
-% offline rereferencing using "average reference" or "linked mastoid"?
-REREF = 'LM'; % 'AR'; 
-
-% > create a name for this run (this will create a separate output & Figures folder)
-%run_name = 'noICA';
-run_name = 'offlineHPF';
-
-if strcmp(REREF, 'LM')
-   run_name = [run_name '_LMref']; 
-end
-output_name = ['output\\' run_name '\\']; % location to save intermediate output files inside each SubjectFolder
-ResultsFolder_thisrun = [ResultsFolder run_name '\\']; % results for all subjects
+% location to save the results for all subjects
 mkdir(ResultsFolder_thisrun);
-
-% > name of confile in the SubjectFolder (can use wildcards)
-confile_name = '*.eeg';
-
-% > which steps to run?
-DO_HPF = true;
-DO_ICA = true; % if we tested human subjects (i.e. not "dry run"), set this to true
-FILTER_AGAIN_BEFORE_ICA = true; % for MEG (a lot more channels), we prob don't need to apply 1Hz HPF before running ICA
-                                % for EEG, this step is recommended, otherwise ICA will just detect all the slow drifts & nothing useful
-                                % (https://www.youtube.com/watch?v=2hrYEYSycGI    https://jinjeon.me/post/eeg-advanced/)
-                                % I tried it - ICA decomposition was indeed poor quality if we don't apply HPF first 
-                                % (doesn't have to be 1Hz though, which actually removes most of the eye artefact; 
-                                % 0.1Hz seems to work well)
-DO_BEH_CHECK = false; % if subjects produced beh responses, set this to true
-DO_PCA = false; % if subjects produced vocal responses, set this to true
-
-% when running many subjects in one batch, process all auto steps until the first manual step
-RUN_UP_TO_BEFORE_MANUAL_ARTEFACT = false;   % auto processing before 1st manual step
-RUN_UP_TO_AFTER_MANUAL_ARTEFACT = false;    % perform 1st manual step (mark artefact & reject bad channels)
-RUN_UP_TO_ICA = false;                      % auto processing before 2nd manual step (ICA component analysis)
-RUN_UP_TO_ICA_REJECTION = false;            % perform 2nd manual step (select ICA comps to reject)
-
-% > other options:
-CHANNEL_REPAIR = true; % repair bad/rejected channels? set to true for EEG data, as channel rejection leads to unbalanced offline reref
-%CALC_UNCLEANED_ERF = false; % calculate uncleaned erf? (for quality check of response-component rejection)
-
-
-% =================
-
-% set filenames for saving the output from each stage (so that we don't have to rerun the whole thing from beginning every time)
-S1_output_filename = 'S1_preprocessed_data.mat'; % Stage 1 output (stored inside each Subject folder)
-%S2_output_filename = 'S2_after_visual_rejection.mat'; % Stage 2 output (stored inside each Subject folder)
-S3_output_filename = ['.mat']; % Final output (stored in ResultsFolder for all subjects)
-
+mkdir(ResultsFolder_conn_thisrun);
 
 % load layout & neighbours
 %load('easycapM11.mat'); % easycap doesn't have PO5 & PO6
-load('lay_AntNeuro64.mat'); % use our custom-made layout & neighbours
-load('neighbours_AntNeuro64.mat');
-load('all_labels_AntNeuro64.mat'); % list of 61 real channels (i.e. excluding M1 M2 EOG)
+load(LAYOUT_FILE); % use our custom-made layout & neighbours
 %figure; ft_plot_layout(lay);
+load(NEIGHBOURS_FILE);
+load(ALL_LABELS_FILE); % list of real EEG channels (i.e. excluding EOG & ref chans): 61 chans for AntNeuro, 27 chans for NeuroPrax
         
-
 
 %% Stage 1: preprocessing
 
@@ -123,7 +66,7 @@ for i = 1:length(SubjectIDs)
         
         
         % get the eeg data file name 
-        files = dir(fullfile(SubjectFolder, confile_name));
+        files = dir(fullfile(SubjectFolder, CONFILE_NAME));
         rawfile = fullfile(files(1).folder, files(1).name);
 
             
@@ -153,7 +96,7 @@ for i = 1:length(SubjectIDs)
         
         % if haven't already processed this before, do it now & save a copy
         if (exist(output_file, 'file') ~= 2)   
-            [alldata] = filtering(alldata, DO_HPF, 0.01, 0.02, 35, 10); % HPF 0.01+-0.01Hz; LPF 35+-5Hz
+            [alldata] = filtering(alldata, DO_HPF, FILTERS);
             
             % save now, because the 0.01Hz HPF TAKES FOREVER to run!
             if (DO_HPF) % to save disk space, only save if we did HPF
@@ -249,8 +192,8 @@ for i = 1:length(SubjectIDs)
                 output_file_ICA = [output_path 'ICA_comps.mat'];        
                 if (exist(output_file_ICA, 'file') ~= 2)    
                     
-                    if (FILTER_AGAIN_BEFORE_ICA) % apply 1Hz HPF (changed to 0.1Hz as that works better) before running ICA
-                        [comp] = ICA_run(true, rawfile, arft, selChLabel);
+                    if (FILTER_AGAIN_BEFORE_ICA) % apply another HPF before running ICA
+                        [comp] = ICA_run(true, FILTERS_for_ICA, rawfile, arft, selChLabel);
                     else % directly run ICA without applying another HPF
                         [comp] = ICA_run(false, alldata);
                     end
@@ -296,7 +239,7 @@ for i = 1:length(SubjectIDs)
         if (CHANNEL_REPAIR)
             % add "elec" field to the data struct (needed for channel repair)
             %elec = ft_read_sens(rawfile, 'senstype','eeg', 'fileformat','easycap_txt');
-            load('elec_AntNeuro64.mat'); % just load the version we have already made
+            load(ELEC_FILE); % just load the version we have already made
             alldata.elec = elec;
             
             alldata = repair_bad_channels(alldata, neighbours, all_labels);
@@ -330,9 +273,11 @@ for i = 1:length(SubjectIDs)
         if strcmp(REREF, 'AR') % re-reference using avg of all channels
             cfg = [];
             cfg.reref      = 'yes';
-            cfg.implicitref = 'CPz'; % add the online ref channel back into the data (will be filled with 0)
             cfg.refchannel = 'all'; % which channels to use for offline reref
             cfg.refmethod  = 'avg';
+            if ~isempty(ONLINE_REF)
+                cfg.implicitref = ONLINE_REF; % add the online ref channel back into the data (will be filled with 0)
+            end
             alldata = ft_preprocessing(cfg, alldata);
         elseif strcmp(REREF, 'LM') % re-reference using linked mastoid (i.e. avg of M1 & M2)  
             % add M1 & M2 back in first
@@ -341,9 +286,11 @@ for i = 1:length(SubjectIDs)
             
             cfg = [];
             cfg.reref      = 'yes';
-            cfg.implicitref = 'CPz'; % add the online ref channel back into the data (will be filled with 0)
             cfg.refchannel = {'M1', 'M2'}; % which channels to use for offline reref
             cfg.refmethod  = 'avg';
+            if ~isempty(ONLINE_REF)
+                cfg.implicitref = ONLINE_REF; % add the online ref channel back into the data (will be filled with 0)
+            end
             alldata = ft_preprocessing(cfg, alldata);
             
             % remove M1 & M2
@@ -352,14 +299,18 @@ for i = 1:length(SubjectIDs)
             alldata = ft_selectdata(cfg, alldata);   
         end
         
+        all_blocks = alldata;
+        
         
         % >>>
         % Step 8: downsample the data for saving
-        %all_blocks.time(1:end) = all_blocks.time(1); % this avoids numeric round off issues in the time axes upon resampling
-        cfg            = [];
-        cfg.resamplefs = 200; % sampling freq was 1000Hz, best to use a divisor of it (200Hz is commonly used)
-        cfg.detrend    = 'no';
-        all_blocks     = ft_resampledata(cfg, alldata);
+        if DOWNSAMPLE ~= 0
+            %all_blocks.time(1:end) = all_blocks.time(1); % this avoids numeric round off issues in the time axes upon resampling
+            cfg            = [];
+            cfg.resamplefs = DOWNSAMPLE; 
+            cfg.detrend    = 'no';
+            all_blocks     = ft_resampledata(cfg, all_blocks);
+        end
 
         % SAVE preprocessed data - takes a while!!
         %save(S1_output_file, 'all_blocks', 'trialinfo_b', '-v7.3');

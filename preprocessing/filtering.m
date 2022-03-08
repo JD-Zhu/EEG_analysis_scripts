@@ -1,6 +1,9 @@
-% do_HPF: if yes, apply 0.01Hz high-pass filter
+% @param filters - should be supplied in this format: [hpfreq hpfiltdf lpfreq lpfiltdf]
+%                  e.g. [0.01 0.02 35 10] means 0.01+-0.01Hz HPF and 35+-5Hz LPF
+%                  Note: hpfreq - (hpfiltdf / 2) must be >= 0
+% @param do_HPF - if no, ignore the hpf settings
 
-function [alldata] = preprocessing(alldata, do_HPF, hpfreq, hpfiltdf, lpfreq, lpfiltdf)
+function [alldata] = filtering(alldata, do_HPF, filters)
     %{
     cfg.bpfilter   = 'yes';
     cfg.bpfreq     = [0.2 30]; % bandpass filter [0.5 30], successfully filtered out the low-freq drift!!
@@ -14,9 +17,8 @@ function [alldata] = preprocessing(alldata, do_HPF, hpfreq, hpfiltdf, lpfreq, lp
         cfg            = [];
         cfg.hpfilter   = 'yes';
         cfg.hpfilttype = 'firws';
-        cfg.hpfreq     = hpfreq; % 0.01 +- 0.01Hz
-        cfg.hpfiltdf   = hpfiltdf; % transition window width (for firws; this param overrides order)
-                              % hpfreq - (hpfiltdf / 2) must be >= 0
+        cfg.hpfreq     = filters(1);
+        cfg.hpfiltdf   = filters(2); % transition window width (for firws; this param overrides order)
         cfg.hpfiltwintype = 'blackman';
         cfg.hpfiltdir  = 'onepass-zerophase';
         alldata = ft_preprocessing(cfg, alldata);
@@ -26,8 +28,8 @@ function [alldata] = preprocessing(alldata, do_HPF, hpfreq, hpfiltdf, lpfreq, lp
     cfg         = [];
     cfg.lpfilter   = 'yes';
     cfg.lpfilttype = 'firws';
-    cfg.lpfreq     = lpfreq; % 35 +- 5Hz
-    cfg.lpfiltdf   = lpfiltdf; % wider transition window means it will run much faster
+    cfg.lpfreq     = filters(3);
+    cfg.lpfiltdf   = filters(4); % wider transition window means it will run much faster
     cfg.lpfiltwintype = 'blackman';
     cfg.lpfiltdir  = 'onepass-zerophase';
     alldata = ft_preprocessing(cfg, alldata);
@@ -41,5 +43,4 @@ function [alldata] = preprocessing(alldata, do_HPF, hpfreq, hpfiltdf, lpfreq, lp
     %cfg.dftfilter = 'yes';
     %cfg.dftfreq   = [50 100 150];
     alldata = ft_preprocessing(cfg, alldata);
-    
 end

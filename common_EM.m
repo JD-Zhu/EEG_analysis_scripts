@@ -1,4 +1,4 @@
-% Settings for SCI project
+% Settings for Episodic Migraine project
 %
 % this acts as the common #define section for all scripts
 %
@@ -14,7 +14,7 @@ function [] = common()
     % 1. Location for your EEG data analysis 
     % (use absolute paths, to avoid any issues when we 'cd' into diff folders)
     global ProjectFolder; global SUBJ_GROUP;
-    ProjectFolder = 'Z:\Analysis\Preprocess\NeuRA_SCI_SCS_CIPN_BUMP\EEG\';
+    ProjectFolder = 'Z:\Analysis\Judy\EpisodicMigraine\';
     SUBJ_GROUP = 'controls'; % Options: 'patients', 'controls'    
     
     global DataFolder;   
@@ -27,7 +27,7 @@ function [] = common()
     global SubjectIDs;
     
     % Option 1: find all subject folders inside DataFolder
-    SubjectIDs = dir([DataFolder '*_S*']);
+    SubjectIDs = dir([DataFolder 'Subject*']);
     % you can modify the list in a few ways:
     %SubjectIDs = [dir([DataFolder 'A*']); dir([DataFolder 'B*'])]; % combine two lists
     %SubjectIDs = SubjectIDs([2 3 6]); % only process selected subjects
@@ -36,11 +36,30 @@ function [] = common()
     SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
 
     % Option 2: manually specify the subject codes
-    SubjectIDs = {'9003_S1', '9005_S1'};%, '9011_S1'};
+    migraineurs_12 = {'Subject_500', 'Subject_548', 'Subject_583', 'Subject_661', ...
+            'Subject_664', 'Subject_671', 'Subject_673', 'Subject_677', ...
+            'Subject_680', 'Subject_681', 'Subject_696', 'Subject_800'};
+    migraineurs_new5 = {'Subject_205', 'Subject_207', 'Subject_208', 'Subject_209', 'Subject_210'};
+    controls_12 = {'Subject_101', 'Subject_495', 'Subject_622', 'Subject_624', ...
+            'Subject_634', 'Subject_642', 'Subject_675', 'Subject_690', ...
+            'Subject_809', 'Subject_885', 'Subject_886', 'Subject_891'};
+    controls_13_remaining = {'Subject_608', 'Subject_610', 'Subject_613', 'Subject_623', ...
+                    'Subject_629', 'Subject_631', 'Subject_640', 'Subject_645', ...
+                    'Subject_682', 'Subject_804', 'Subject_808', 'Subject_844', 'Subject_846'};
+    controls_4new = {'Subject_251', 'Subject_252', 'Subject_253', 'Subject_254'};
+
+    if strcmp(SUBJ_GROUP, 'patients')
+        SubjectIDs = [migraineurs_12 migraineurs_new5];
+    elseif strcmp(SUBJ_GROUP, 'controls')
+        SubjectIDs = [controls_12 controls_13_remaining controls_4new];
+    end
+
+    % or process these new subjects only
+    SubjectIDs = {'Subject_608'}; %846, 640, 631, 629
     
     
     % 3. Which EEG system did you use to collect the data?
-    EEG_system = 'AntNeuro64'; % Options: 'AntNeuro64', 'NeuroPrax32'
+    EEG_system = 'NeuroPrax32'; % Options: 'AntNeuro64', 'NeuroPrax32'
     
     % these custom layout files for each system were made using prepare_layout_and_neighbours.m
     global LAYOUT_FILE; global NEIGHBOURS_FILE; global ALL_LABELS_FILE; global ELEC_FILE;
@@ -49,10 +68,6 @@ function [] = common()
     ALL_LABELS_FILE = ['all_labels_' EEG_system '.mat'];
     ELEC_FILE = ['elec_' EEG_system '.mat'];
 
-    % actual EEG channels
-    %global EEG_chans;
-    %EEG_chans = [1:12 14:18 20:31 33:64]; % M1=13, M2=19, EOG=32
-    
     global CONFILE_NAME; % name of the raw data file in each subject folder (can use wildcards)
     global ONLINE_REF; % specify the online ref channel for this EEG system (if you want to add it back into the data during reref)
     if strcmp(EEG_system, 'AntNeuro64')
@@ -68,7 +83,7 @@ function [] = common()
     
     % (1) create a name for this run (this will create a separate output & Figures folder)
     global run_name;
-    run_name = 'offlineHPF'; %'noICA';
+    run_name = '_EC_LPF30'; % '_EO';
     
     global file_suffix; % only used in main_migraine.m right now - can we get rid of this?
     file_suffix = ''; %'_minReject': only reject a noisy chan if it's utterly crazy - keep where possible (note: all flat channels must still be rejected)
@@ -76,7 +91,7 @@ function [] = common()
 
     % (2) offline rereferencing using "average reference" or "linked mastoid"?
     global REREF; 
-    REREF = 'LM'; % Options: 'AR', 'LM'
+    REREF = 'AR'; % we don't have M1 M2 for these data, so just use avg ref
 
     if strcmp(REREF, 'LM')
        run_name = [run_name '_LMref']; 
@@ -94,7 +109,7 @@ function [] = common()
     
     % (4) include infra-slow oscillations in the analysis?
     global ANALYSE_ISO;
-    ANALYSE_ISO = true;
+    ANALYSE_ISO = false; % ISO range was already filtered out in these data
     
     
     % (5) which preprocessing steps to run?
@@ -103,23 +118,18 @@ function [] = common()
     global CHANNEL_REPAIR; global DO_BEH_CHECK; global DO_PCA;
     global DOWNSAMPLE; % set this to 0 if no downsampling needed (e.g. for chronic migraine data acquired at 125Hz sampling rate)
     DO_HPF = true;
-    FILTERS = [0.01 0.02 35 10]; % HPF 0.01+-0.01Hz; LPF 35+-5Hz
+    FILTERS = [1 2 35 10]; % HPF 1+-1Hz; LPF 35+-5Hz
     PLOT_CHANNEL_SPECTRA = false; % during initial data inspection, plot channel spectra to help with determining bad channels?
                                   % Note: channel spectra is plotted on raw data (i.e. without filtering)
-    DO_ICA = true; % a useful method for removing eye artefact etc
-    FILTER_AGAIN_BEFORE_ICA = true; % for MEG (a lot more channels), we prob don't need to apply 1Hz HPF before running ICA (so set this to false)
-                                    % for EEG, this step is recommended, otherwise ICA will just detect all the slow drifts & nothing useful
-                                    % (https://www.youtube.com/watch?v=2hrYEYSycGI    https://jinjeon.me/post/eeg-advanced/)
-                                    % I tried it on SCI data - ICA decomposition was indeed poor quality if we don't apply another HPF first 
-    FILTERS_for_ICA = [0.1 0.2 FILTERS(3) FILTERS(4)]; % use the original LPF settings (so that we have consistent data to run ICA on)    
-                                    % The new HPF doesn't have to be 1Hz, which actually removed most of the eye artefact (0.5Hz removed quite a lot too); 
-                                    % 0.1+-0.1Hz seems to work well for the SCI project (whereas wider transition bands caused too many slow drift components)
+    DO_ICA = false; % short 5min recording, eyes-closed resting state
+    FILTER_AGAIN_BEFORE_ICA = false; % this dataset is already HPF'd at 1Hz, no need to filter again before ICA
+    %HPF_for_ICA = [1 2 FILTERS(3) FILTERS(4)]; % n/a
     CHANNEL_REPAIR = true; % interpolate rejected channels? 
                            % must set to true if using "average reference", as channel rejection leads to unbalanced reref
     DO_BEH_CHECK = false; % if subjects produced beh responses, set this to true
     DO_PCA = false; % if subjects produced vocal responses, set this to true
-    DOWNSAMPLE = 200; % SCI project: sampling rate was 1000Hz, best to use a divisor of it (200Hz is commonly used)
-    
+    DOWNSAMPLE = 250; % old episodic migraine data: sampling rate was 500Hz, best to use a divisor of it (~200Hz is commonly used)
+
     % when running many subjects in one batch, process all auto steps until the next manual step
     global RUN_UP_TO_BEFORE_MANUAL_ARTEFACT; global RUN_UP_TO_AFTER_MANUAL_ARTEFACT; 
     global RUN_UP_TO_ICA; global RUN_UP_TO_ICA_REJECTION; global BROWSING_WITHOUT_SAVE;
@@ -130,11 +140,16 @@ function [] = common()
     BROWSING_WITHOUT_SAVE = false;              % browse filtered data - do not save arft & selChLabels
 
     % locations to save the output                   
+    temp_name = run_name(2:end);
+    if isempty(temp_name)
+        temp_name = 'full';
+    end
+
     global output_name; % for intermediate output files during preprocessing (so that we don't have to rerun the whole thing from beginning every time)
     global ResultsFolder_thisrun; global ResultsFolder_conn_thisrun; % results for all subjects
-    output_name = ['output\\' run_name '\\']; % TODO (future): separate these from the DataFolder - put them in a separate "preprocessed" folder at the top level
-    ResultsFolder_thisrun = [ResultsFolder run_name '\\'];
-    ResultsFolder_conn_thisrun = [ResultsFolder_conn run_name '\\'];
+    output_name = ['output' run_name '\\']; % TODO (future): separate these from the DataFolder - put them in a separate "preprocessed" folder at the top level
+    ResultsFolder_thisrun = [ResultsFolder temp_name '\\'];
+    ResultsFolder_conn_thisrun = [ResultsFolder_conn temp_name '\\'];
     
     % filenames for saving the intermediate output from each stage of preprocessing
     global S1_output_filename; global S3_output_filename; global S4_output_filename;
@@ -146,7 +161,7 @@ function [] = common()
     
     % (6) special troubleshooting steps for old episodic migraine data only
     global EPISODIC_ONLY;
-    EPISODIC_ONLY = false;
+    EPISODIC_ONLY = true;
     
     
     % 5. Options for grand average & excel export (stats_FREQ.m)

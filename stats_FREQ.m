@@ -10,28 +10,20 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-% = Settings =
+% NOTE - currently in the process of migrating all the settings to common.m,
+% so some of the constants (e.g. SubjectIDs) are still being set within this script!
 
-% PLEASE SPECIFY:
-which_project = 'SCI'; % Options: 'SCI', 'migraine'
-subj_group = ''; % Options: 'migraineurs', 'controls' (for SCI project, please leave empty for now)
-
-%ProjectFolder = 'Z:\Analysis\Judy\EpisodicMigraine\';
-ProjectFolder = 'Z:\Analysis\Preprocess\NeuRA_SCI_SCS_CIPN_BUMP\EEG\';
-%run_name = 'EC_LPF30';
-run_name = 'offlineHPF_LMref';
-
-% are we working with connectivity results here?
-is_conn = false;
+global SUBJ_GROUP; global ResultsFolder_thisrun;
+global ANALYSE_ISO; global PLOT_XLIM; global FREQ_FIELD; global FREQS_TO_EXPORT; 
+global is_conn;
+common();
 
 
 % can specify a subset of subjects to use,
 % or leave empty (to use all subjs in the folder)
 SubjectIDs = [];
-% Final set of 17 controls (age & gender matched to migraineurs)
-if strcmp(which_project, 'migraine') && strcmp(subj_group, 'controls')
-    SubjectIDs = {'Subject_101', 'Subject_251', 'Subject_252', 'Subject_253', 'Subject_254', 'Subject_495', 'Subject_610', 'Subject_622', 'Subject_623', 'Subject_634', 'Subject_642', 'Subject_675', 'Subject_690', 'Subject_809', 'Subject_844', 'Subject_885', 'Subject_891'};
-end
+% Episodic migraine proj - final set of 17 controls (age & gender matched to migraineurs)
+%SubjectIDs = {'Subject_101', 'Subject_251', 'Subject_252', 'Subject_253', 'Subject_254', 'Subject_495', 'Subject_610', 'Subject_622', 'Subject_623', 'Subject_634', 'Subject_642', 'Subject_675', 'Subject_690', 'Subject_809', 'Subject_844', 'Subject_885', 'Subject_891'};
 % Groups based on migraine phases:
 %SubjectIDs = {'Subject_500', 'Subject_548', 'Subject_208'}; % prodrome
 %SubjectIDs = {'Subject_583', 'Subject_673', 'Subject_680', 'Subject_205'}; % postdrome
@@ -41,18 +33,6 @@ end
 %SubjectIDs = {'Subject_583', 'Subject_661', 'Subject_671'}; % 1-2 days / month
 %SubjectIDs = {'Subject_500', 'Subject_548', 'Subject_664', 'Subject_673', 'Subject_680'}; % >3 days / month
 
-
-% automatic setup
-%global ResultsFolder; common();
-ResultsFolder = [ProjectFolder 'results\' subj_group '\']; % all subjects' freq analysis results are stored here
-if is_conn
-    ResultsFolder = [ProjectFolder 'results_conn\' subj_group '\']; % all subjects' connectivity results are stored here
-    %run_name = [run_name '_afterSL']; % if you want to use the version of results with SL applied
-end
-ResultsFolder_thisrun = [ResultsFolder run_name '\']; % where to read in the result files for all subjects
-save_location = [ResultsFolder_thisrun 'GA_' subj_group '\']; % where to save the GA & figures
-mkdir(save_location);
-
 % if subject list is empty, then use all results files in the folder
 if isempty(SubjectIDs)
     SubjectIDs = dir([ResultsFolder_thisrun '*.mat']);
@@ -60,14 +40,10 @@ if isempty(SubjectIDs)
     SubjectIDs = cellfun(@(x) x(1:end-4), SubjectIDs, 'un', 0); % remove the '.mat' extension
 end
 
-% settings for each project
-if strcmp(which_project, 'migraine')
-    x_limits = [2 30]; % for plotting, we are interested in 2-30Hz (everything else was filtered out)
-    freq_field = 1:30; % for fixing up the freq field (for some reason the freq values are not whole numbers)
-elseif strcmp(which_project, 'SCI')
-    x_limits = [1 30]; % anything below 1Hz is way over powered (rendering the whole plot unviewable)
-    freq_field = 0:0.01:30;
-end
+
+% location to save the GA & figures
+save_location = [ResultsFolder_thisrun 'GA_' SUBJ_GROUP '\'];
+mkdir(save_location);
 
 
 %% Read in each subject's result file & plot overall power (i.e. avg of all sensors), 
@@ -85,18 +61,18 @@ if ~is_conn
 
         load(filename);
 
-        freq.freq = freq_field;  % do some fixing up (coz the "freq" field created by ft_freqanalysis 
+        freq.freq = FREQ_FIELD;  % do some fixing up (coz the "freq" field created by ft_freqanalysis 
         % does not contain whole numbers & vary across subjects, causing issues for the plot)
 
         % plot the "overall power" for this subject
         plot(freq.freq, mean(freq.powspctrm));
-        xlim(x_limits);
+        xlim(PLOT_XLIM);
         xlabel('Frequency (Hz)');
         ylabel('Absolute power (uV^2)');
 
         % plot the "overall power" for this subject (log transformed)
         %plot(freq.freq, mean(log(freq.powspctrm)));
-        %xlim(x_limits);
+        %xlim(PLOT_XLIM);
         %xlabel('Frequency (Hz)');
         %ylabel('Power (log[uV^2]');
     end
@@ -146,13 +122,9 @@ if ~is_conn
 
             % write the power spectrum matrix for this subject
             M = allSubjects_freq{i}.powspctrm';
-            freq_labels = freq_field;
-            if strcmp(which_project, 'SCI') % for SCI proj, only export certain freqs (coz we computed 6001 freq points: 0:0.005:30)
-                freq_labels = [0.02:0.01:0.09 0.1:0.1:0.9 1:30];
-                rows = find(ismembertol(freq_field, freq_labels, 1e-4)); % find the rows to export (comparing floating point numbers is tricky, so we add a small tolerance to make sure they can be matched up)
-                M = M(rows, :);
-            end
-            M2 = [NaN(height(M),1) freq_labels' M]; % add an empty col in front, then a second col containing the freq labels (e.g. 1-30Hz)
+            rows = find(ismembertol(FREQ_FIELD, FREQS_TO_EXPORT, 1e-4)); % find the rows to export (comparing floating point numbers is tricky, so we add a small tolerance to make sure they can be matched up)
+            M = M(rows, :);
+            M2 = [NaN(height(M),1) FREQS_TO_EXPORT' M]; % add an empty col in front, then a second col containing the freq labels (e.g. 1-30Hz)
             writematrix(M2, Excel_output_file, 'WriteMode','append');
         end
     end
@@ -203,7 +175,7 @@ if is_conn % for connectivity analysis
     figure;
     cfg           = [];
     cfg.parameter = 'cohspctrm';
-    cfg.xlim      = x_limits;
+    cfg.xlim      = PLOT_XLIM;
     cfg.zlim      = [0 1];
     ft_connectivityplot(cfg, GA_freq);
 
@@ -226,13 +198,8 @@ if is_conn % for connectivity analysis
     
 else % for standard freq analysis (GA power spectrum & topo for each freq band)
     
-    if strcmp(which_project, 'SCI')
-        load('lay_AntNeuro64.mat');
-        plot_TFR(GA_freq, lay, save_location, x_limits, true); % include topoplot for infra-slow
-    elseif strcmp(which_project, 'migraine')
-        load('lay_NeuroPrax32.mat');
-        plot_TFR(GA_freq, lay, save_location, x_limits, false);
-    end
+    load(LAYOUT_FILE);
+    plot_TFR(GA_freq, lay, save_location, PLOT_XLIM, ANALYSE_ISO); % include topoplot for infra-slow?
     
     % For sanity check: detailed topoplots (at regular freq interval)
     %{
