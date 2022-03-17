@@ -86,11 +86,7 @@ function [] = common()
     
     % (3) for connectivity analysis ONLY - apply surface Laplacian to deal with volumn conduction issue?
     global APPLY_SL; 
-    APPLY_SL = false;
-            
-    if APPLY_SL
-        run_name = [run_name '_afterSL'];
-    end
+    APPLY_SL = true;
 
     
     % (4) include infra-slow oscillations in the analysis?
@@ -155,10 +151,6 @@ function [] = common()
     % (1) are we working with connectivity results here? 
     global is_conn; % this setting is not just for setting the correct folder below - it's being used in a number of places in stats_FREQ.m
     is_conn = false;
-
-    if is_conn
-        ResultsFolder_thisrun = ResultsFolder_conn_thisrun;
-    end
     
     
     % (2) specify a list of subjects to compute GA on

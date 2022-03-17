@@ -10,10 +10,15 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-global SubjectIDs_GA; global ResultsFolder_thisrun; global LAYOUT_FILE; 
+global SubjectIDs_GA; global LAYOUT_FILE; global is_conn;
+global ResultsFolder_thisrun; global ResultsFolder_conn_thisrun;
 global ANALYSE_ISO; global PLOT_XLIM; global FREQ_FIELD; global FREQS_TO_EXPORT; 
-global is_conn;
 common();
+
+% change to the correct ResultsFolder
+if is_conn
+    ResultsFolder_thisrun = ResultsFolder_conn_thisrun;
+end
 
 % location to save the GA & figures
 save_location = [ResultsFolder_thisrun 'GA\'];

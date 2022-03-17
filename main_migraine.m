@@ -20,7 +20,7 @@ global RUN_UP_TO_BEFORE_MANUAL_ARTEFACT; global RUN_UP_TO_AFTER_MANUAL_ARTEFACT;
 global RUN_UP_TO_ICA; global RUN_UP_TO_ICA_REJECTION; global BROWSING_WITHOUT_SAVE;
 global ANALYSE_ISO; global EPISODIC_ONLY;
 % global colours;
-common();
+common_EM();
 
 % location to save the results for all subjects
 mkdir(ResultsFolder_thisrun);
@@ -555,7 +555,7 @@ end
 
 
 %% Stage 4: connectivity analysis
-%{
+
 for i = 1:length(SubjectIDs)
     
     SubjectID = cell2mat(SubjectIDs(i));
@@ -659,4 +659,3 @@ for i = 1:length(SubjectIDs)
         load(S4_output_file);
     end
 end
-%}
