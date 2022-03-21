@@ -16,7 +16,7 @@ function [] = common()
     ProjectFolder = 'Z:\Analysis\Judy\EpisodicMigraine\';
     
     global SUBJ_GROUP;
-    SUBJ_GROUP = 'controls'; % Options: 'patients', 'controls'    
+    SUBJ_GROUP = 'patients'; % Options: 'patients', 'controls'    
     
     global DataFolder;   
     DataFolder = [ProjectFolder 'data\' SUBJ_GROUP '\']; % this directory should contain all the SubjectFolders
@@ -175,7 +175,9 @@ function [] = common()
     global SubjectIDs_GA;
     SubjectIDs_GA = [];
     % Episodic migraine proj - final set of 17 controls (age & gender matched to migraineurs)
-    SubjectIDs_GA = {'Subject_101', 'Subject_251', 'Subject_252', 'Subject_253', 'Subject_254', 'Subject_495', 'Subject_610', 'Subject_622', 'Subject_623', 'Subject_634', 'Subject_642', 'Subject_675', 'Subject_690', 'Subject_809', 'Subject_844', 'Subject_885', 'Subject_891'};
+    if strcmp(SUBJ_GROUP, 'controls')
+        SubjectIDs_GA = {'Subject_101', 'Subject_251', 'Subject_252', 'Subject_253', 'Subject_254', 'Subject_495', 'Subject_610', 'Subject_622', 'Subject_623', 'Subject_634', 'Subject_642', 'Subject_675', 'Subject_690', 'Subject_809', 'Subject_844', 'Subject_885', 'Subject_891'};
+    end
     % Groups based on migraine phases:
     %SubjectIDs_GA = {'Subject_500', 'Subject_548', 'Subject_208'}; % prodrome
     %SubjectIDs_GA = {'Subject_583', 'Subject_673', 'Subject_680', 'Subject_205'}; % postdrome
