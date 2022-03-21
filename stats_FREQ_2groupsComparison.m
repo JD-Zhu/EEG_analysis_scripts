@@ -15,7 +15,7 @@
 
 
 global LAYOUT_FILE; global NEIGHBOURS_FILE; global PLOT_XLIM; global is_conn;
-common();
+common_EM();
 
 load(LAYOUT_FILE);
 
@@ -350,7 +350,10 @@ else
     L: yes if the values are normally distributed.
     %}
 
+    % for some reason mig #2 data is messed up, so remove for now
+    %mig_indi.cohspctrm(2,:,:,:) = [];
 
+    
     %% Compare coherence btwn mig & ctrl (t-test for each pair of channels: 27 x 27)
     % the actual number of tests (i.e. non-repeated channel pairs) is 1 + 2 + ... + 26 = 351 comparisons
 
@@ -358,11 +361,7 @@ else
     freq_range = 9:12;
     freq_band = 'alpha';
 
-
-    % for some reason mig #2 data is messed up, so remove for now
-    mig_indi.cohspctrm(2,:,:,:) = [];
-
-
+    
     N_chan = size(mig_indi.cohspctrm, 2); % number of channels
 
     c = []; % for normality check (see below)
@@ -392,20 +391,20 @@ else
             % if not normally distributed, try non-parametric alternatives of t-test:
             % https://www.statisticshowto.com/probability-and-statistics/non-normal-distributions/
 
-            % (1) Wilcoxon rank sum test / Mann-Whitney U-test (is this only for paired samples??)
-            [p,h,stats] = ranksum(a, b); %, 'method','approximate'); 
+            % (1) Wilcoxon rank sum test / Mann-Whitney U-test
+            [p,h,stats] = ranksum(a, b, 'tail','right'); % right-tailed test: a > b
             % (2) Kruskal-Wallis test (replacement for one-way ANOVA)
-            grouping_var = [repmat({'pt'}, [length(a),1]); repmat({'ctrl'}, [length(b),1])];
-            [p,tbl,stats] = kruskalwallis([a; b], grouping_var, 'off');
+            %grouping_var = [repmat({'pt'}, [length(a),1]); repmat({'ctrl'}, [length(b),1])];
+            %[p,tbl,stats] = kruskalwallis([a; b], grouping_var, 'off');
 
-            p_values(i,j) = p; % store the t-value into the "chan x chan" matrix
+            p_values(i,j) = p; % store the p-value into the "chan x chan" matrix
         end
     end
 
     length(find(c)) % out of 351 possible channel pairs, how many have non-normally distributed data
     %adtest(c)
 
-    %%
+    %
     figure; title('t-values (migraineurs > controls)');
     imagesc(t_values)
     colorbar
@@ -419,7 +418,7 @@ else
     colorbar
     ylabel('EEG channel');
     xlabel('EEG channel');
-    %export_fig(gcf, [stats_folder 'p-values_MannWhitneyUtest_' freq_band '.png']);
-    export_fig(gcf, [stats_folder 'p-values_kruskalwallis_' freq_band '.png']);
+    export_fig(gcf, [stats_folder 'pvalues_MannWhitneyUtest_migGreater_' freq_band '.png']);
+    %export_fig(gcf, [stats_folder 'pvalues_kruskalwallis_' freq_band '.png']);
 
 end
