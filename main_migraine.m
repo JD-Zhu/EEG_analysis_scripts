@@ -18,7 +18,7 @@ global DO_ICA; global FILTER_AGAIN_BEFORE_ICA; global FILTERS_for_ICA;
 global CHANNEL_REPAIR; global DOWNSAMPLE; %global DO_BEH_CHECK; global DO_PCA;
 global RUN_UP_TO_BEFORE_MANUAL_ARTEFACT; global RUN_UP_TO_AFTER_MANUAL_ARTEFACT; 
 global RUN_UP_TO_ICA; global RUN_UP_TO_ICA_REJECTION; global BROWSING_WITHOUT_SAVE;
-global ANALYSE_ISO; global EPISODIC_ONLY;
+global ANALYSE_ISO; global FREQ_BANDS; global EPISODIC_ONLY;
 % global colours;
 common_EM();
 
@@ -543,7 +543,7 @@ for i = 1:length(SubjectIDs)
         
         % this fn takes care of all the plotting 
         % (power spectrum & topo for each freq band)
-        plot_TFR(freq, lay, save_location, [1 30], false);
+        plot_TFR(freq, lay, save_location, [1 30], FREQ_BANDS);
         
         
         % SAVE all relevant variables from the workspace
@@ -583,8 +583,11 @@ for i = 1:length(SubjectIDs)
         % https://www.fieldtriptoolbox.org/reference/ft_scalpcurrentdensity/
         if APPLY_SL
             cfg = [];
-            cfg.method = 'finite'; % finite-difference method for the surface Laplacian on a triangulated sphere
+            cfg.method = 'spline'; %'finite'; % finite-difference method for the surface Laplacian on a triangulated sphere
+            cfg.order = 4; % use less flexible splines (4 or 5) for low-density EEG (e.g. 32 chan). https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4537804/
             %cfg.feedback = string, 'no', 'text', 'textbar', 'gui' (default = 'text')
+            load(ELEC_FILE); % just load the version we have already made
+            cfg.elec = elec;
             [all_blocks] = ft_scalpcurrentdensity(cfg, all_blocks);
         end
         
@@ -613,7 +616,7 @@ for i = 1:length(SubjectIDs)
 
         set(gcf, 'Position', get(0, 'Screensize')); % make the figure full-screen
         if APPLY_SL
-            export_fig(gcf, [save_location 'coherence_afterSL.png']); % use this tool to save the figure exactly as shown on screen
+            export_fig(gcf, [save_location 'coherence_afterSplineSL.png']); % use this tool to save the figure exactly as shown on screen
         else
             export_fig(gcf, [save_location 'coherence.png']); % use this tool to save the figure exactly as shown on screen
         end
