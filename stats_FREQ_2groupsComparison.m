@@ -15,7 +15,8 @@
 
 
 global LAYOUT_FILE; global NEIGHBOURS_FILE; global PLOT_XLIM; global is_conn;
-common_EM();
+global FREQ_BANDS;
+common();
 
 load(LAYOUT_FILE);
 
@@ -32,7 +33,7 @@ varType = 'unequal'; %'equal';
 logged = true;
 
 % PLEASE SPECIFY the folder for this statistical analysis
-stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\17vs17_conn_afterSL\';
+stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\17vs17_conn_afterSplineSL\';
 
 
 % where to read in the freq results for each group:
@@ -156,36 +157,38 @@ if ~is_conn
     %% t-test at each channel for each freq band (27 x 3 = 81 comparisons)
     % (see Figure 2b in Flavia paper)
 
-    % need to specify each freq band manually for now
-    freq_range = 9:12;
-    freq_band = 'alpha';
+    % loop thru each freq band
+    for band = 1:length(FREQ_BANDS)
+        freq_band = cell2mat(FREQ_BANDS{band, 1}); % first field is the freq band name
+        freq_range = FREQ_BANDS{band, 2}; % second field is the freq range in Hz
+    
+        N_chan = size(mig_indi.powspctrm, 2); % get the number of channels
 
-    N_chan = size(mig_indi.powspctrm, 2); % get the number of channels
+        % initialise an array to store the t-value for each channel
+        t_values = zeros(N_chan, 1);
+        p_values = zeros(N_chan, 1);
 
-    % initialise an array to store the t-value for each channel
-    t_values = zeros(N_chan, 1);
-    p_values = zeros(N_chan, 1);
+        for i = 1:N_chan % loop through each channel
+            a = mig_indi.powspctrm(:,i,freq_range); % extract power for all migraineurs (only for the selected freq range)
+            a = mean(a,3); % take the avg over that freq range
+            b = ctrl_indi.powspctrm(:,i,freq_range); % do the same for controls
+            b = mean(b,3); 
 
-    for i = 1:N_chan % loop through each channel
-        a = mig_indi.powspctrm(:,i,freq_range); % extract power for all migraineurs (only for the selected freq range)
-        a = mean(a,3); % take the avg over that freq range
-        b = ctrl_indi.powspctrm(:,i,freq_range); % do the same for controls
-        b = mean(b,3); 
+            [h,p,ci,stats] = ttest2(a, b, 'Vartype',varType); % or should it be equal variance?
+            t_values(i) = stats.tstat; % store the t-value into the array
+            p_values(i) = p;
+        end
 
-        [h,p,ci,stats] = ttest2(a, b, 'Vartype',varType); % or should it be equal variance?
-        t_values(i) = stats.tstat; % store the t-value into the array
-        p_values(i) = p;
+        % create a dummy var for plotting
+        freq = GA_freq;
+        freq.powspctrm = t_values;
+        freq.freq = 0; % we no longer have a frequency dimension, just fill with a dummy value
+
+        % plot topography based on the t-values
+        zlim = [0 3];
+        plot_TFR_topo(freq, lay, freq_band, [], [stats_folder_indi_chan 'tvalues_' logged_suffix '_'], zlim);
     end
-
-    % create a dummy var for plotting
-    freq = GA_freq;
-    freq.powspctrm = t_values;
-    freq.freq = 0; % we no longer have a frequency dimension, just fill with a dummy value
-
-    % plot topography based on the t-values
-    zlim = [0 3];
-    plot_TFR_topo(freq, lay, freq_band, [], [stats_folder_indi_chan 'tvalues_' logged_suffix '_'], zlim);
-
+    
 
     %% plot the topography difference btwn two groups
     % e.g. subtract the topo for alpha (migraineurs minus controls)
@@ -198,10 +201,11 @@ if ~is_conn
     diff_GA.powspctrm = mig_avg.powspctrm - ctrl_avg.powspctrm;
 
     % plot topography based on the difference GA
-    plot_TFR_topo(diff_GA, lay, 'theta', [4 8], [stats_folder 'topo_mig-minus-ctrl_'])
-    plot_TFR_topo(diff_GA, lay, 'alpha', [9 12], [stats_folder 'topo_mig-minus-ctrl_'])
-    plot_TFR_topo(diff_GA, lay, 'beta', [13 25], [stats_folder 'topo_mig-minus-ctrl_'])
-
+    for band = 1:length(FREQ_BANDS)
+        freq_band = cell2mat(FREQ_BANDS{band, 1}); % first field is the freq band name
+        freq_range = FREQ_BANDS{band, 2}; % second field is the freq range in Hz
+        plot_TFR_topo(diff_GA, lay, freq_band, [freq_range(1) freq_range(end)], [stats_folder 'topo_mig-minus-ctrl_'])
+    end
 
 
     %% Cluster-based statistical analysis
@@ -229,15 +233,15 @@ if ~is_conn
 
 
     % Opt 1: find spatio-freq cluster:
-    %foi = [1 30];
     %freq_band = 'spatio-freq';
+    %freq_range = [1 30];
     % Opt 2: find spatial cluster for a particular freq band:
-    foi = [9 12];
     freq_band = 'alpha';
-
+    freq_range = [9 12];
+    
     cfg = [];
     cfg.channel = 'all';
-    cfg.frequency = foi;
+    cfg.frequency = freq_range;
     if strcmp(freq_band, 'spatio-freq')
         cfg.avgoverfreq = 'no'; % if searching for spatio-freq cluster, don't avg
     else
@@ -357,68 +361,69 @@ else
     %% Compare coherence btwn mig & ctrl (t-test for each pair of channels: 27 x 27)
     % the actual number of tests (i.e. non-repeated channel pairs) is 1 + 2 + ... + 26 = 351 comparisons
 
-    % need to specify each freq band manually
-    freq_range = 9:12;
-    freq_band = 'alpha';
+    % loop thru each freq band
+    for band = 1:length(FREQ_BANDS)
+        freq_band = cell2mat(FREQ_BANDS{band, 1}); % first field is the freq band name
+        freq_range = FREQ_BANDS{band, 2}; % second field is the freq range in Hz
 
     
-    N_chan = size(mig_indi.cohspctrm, 2); % number of channels
+        N_chan = size(mig_indi.cohspctrm, 2); % number of channels
 
-    c = []; % for normality check (see below)
+        c = []; % for normality check (see below)
 
-    % initialise "chan x chan" matrix to store t-values
-    t_values = zeros(N_chan, N_chan);
-    p_values = zeros(N_chan, N_chan);
+        % initialise "chan x chan" matrix to store t-values
+        t_values = zeros(N_chan, N_chan);
+        p_values = zeros(N_chan, N_chan);
 
-    for i = 1:N_chan % loop through each "from" channel
-        for j = 1:N_chan % loop through each "to" channel
-            a = mig_indi.cohspctrm(:,i,j, freq_range); % extract coh values for all migraineurs
-            a = mean(a, 4); % avg over the selected freq range
-            b = ctrl_indi.cohspctrm(:,i,j, freq_range); % extract coh values for all controls
-            b = mean(b, 4); % avg over the selected freq range
+        for i = 1:N_chan % loop through each "from" channel
+            for j = 1:N_chan % loop through each "to" channel
+                a = mig_indi.cohspctrm(:,i,j, freq_range); % extract coh values for all migraineurs
+                a = mean(a, 4); % avg over the selected freq range
+                b = ctrl_indi.cohspctrm(:,i,j, freq_range); % extract coh values for all controls
+                b = mean(b, 4); % avg over the selected freq range
 
-            % check if data are normally distributed (an assumption of the t-test)
-            if (i < j) % only check non-repeated channel pairs (i.e. 351 pairs)
-                % use Anderson-Darling test for normality: 0 = normally distributed; 1 = not normally distributed
-                c = [c adtest([a; b])]; % opt 1: test normality on the data for each channel pair, and collect results into an array
-                %c = [c; a; b]; % opt 2: put all data together, you can then run adtest(c) afterwards
+                % check if data are normally distributed (an assumption of the t-test)
+                if (i < j) % only check non-repeated channel pairs (i.e. 351 pairs)
+                    % use Anderson-Darling test for normality: 0 = normally distributed; 1 = not normally distributed
+                    c = [c adtest([a; b])]; % opt 1: test normality on the data for each channel pair, and collect results into an array
+                    %c = [c; a; b]; % opt 2: put all data together, you can then run adtest(c) afterwards
+                end
+
+                [h,p,ci,stats] = ttest2(a, b, 'Vartype',varType);
+                t_values(i,j) = stats.tstat; % store the t-value into the "chan x chan" matrix
+
+
+                % if not normally distributed, try non-parametric alternatives of t-test:
+                % https://www.statisticshowto.com/probability-and-statistics/non-normal-distributions/
+
+                % (1) Wilcoxon rank sum test / Mann-Whitney U-test
+                [p,h,stats] = ranksum(a, b, 'tail','left'); % right-tailed test: a > b
+                % (2) Kruskal-Wallis test (replacement for one-way ANOVA)
+                %grouping_var = [repmat({'pt'}, [length(a),1]); repmat({'ctrl'}, [length(b),1])];
+                %[p,tbl,stats] = kruskalwallis([a; b], grouping_var, 'off');
+
+                p_values(i,j) = p; % store the p-value into the "chan x chan" matrix
             end
-
-            [h,p,ci,stats] = ttest2(a, b, 'Vartype',varType);
-            t_values(i,j) = stats.tstat; % store the t-value into the "chan x chan" matrix
-
-
-            % if not normally distributed, try non-parametric alternatives of t-test:
-            % https://www.statisticshowto.com/probability-and-statistics/non-normal-distributions/
-
-            % (1) Wilcoxon rank sum test / Mann-Whitney U-test
-            [p,h,stats] = ranksum(a, b, 'tail','right'); % right-tailed test: a > b
-            % (2) Kruskal-Wallis test (replacement for one-way ANOVA)
-            %grouping_var = [repmat({'pt'}, [length(a),1]); repmat({'ctrl'}, [length(b),1])];
-            %[p,tbl,stats] = kruskalwallis([a; b], grouping_var, 'off');
-
-            p_values(i,j) = p; % store the p-value into the "chan x chan" matrix
         end
+
+        length(find(c)) % out of 351 possible channel pairs, how many have non-normally distributed data
+        %adtest(c)
+
+        
+        figure; title('t-values (migraineurs > controls)');
+        imagesc(t_values)
+        colorbar
+        ylabel('EEG channel');
+        xlabel('EEG channel');
+        export_fig(gcf, [stats_folder 'tvalues_' freq_band '.png']);
+
+        p_values(isnan(p_values)) = 1; % replace all NaNs first, so they don't show up as sig p-values in the plot
+        figure;
+        imagesc(p_values, [0 0.05]) % only plot p-values up to 0.05
+        colorbar
+        ylabel('EEG channel');
+        xlabel('EEG channel');
+        export_fig(gcf, [stats_folder 'pvalues_MannWhitneyUtest_ctrlGreater_' freq_band '.png']);
+        %export_fig(gcf, [stats_folder 'pvalues_kruskalwallis_' freq_band '.png']);
     end
-
-    length(find(c)) % out of 351 possible channel pairs, how many have non-normally distributed data
-    %adtest(c)
-
-    %
-    figure; title('t-values (migraineurs > controls)');
-    imagesc(t_values)
-    colorbar
-    ylabel('EEG channel');
-    xlabel('EEG channel');
-    export_fig(gcf, [stats_folder 'tvalues_' freq_band '.png']);
-
-    p_values(isnan(p_values)) = 1; % replace all NaNs first, so they don't show up as sig p-values in the plot
-    figure;
-    imagesc(p_values, [0 0.05]) % only plot p-values up to 0.05
-    colorbar
-    ylabel('EEG channel');
-    xlabel('EEG channel');
-    export_fig(gcf, [stats_folder 'pvalues_MannWhitneyUtest_migGreater_' freq_band '.png']);
-    %export_fig(gcf, [stats_folder 'pvalues_kruskalwallis_' freq_band '.png']);
-
 end

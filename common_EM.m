@@ -108,6 +108,14 @@ function [] = common()
     global ANALYSE_ISO;
     ANALYSE_ISO = false; % ISO range was already filtered out in these data
     
+    % specify which freq bands to analyse
+    global FREQ_BANDS;
+    if ANALYSE_ISO
+        FREQ_BANDS = {{'infraslow'},0.03:0.01:0.06; {'theta'},4:8; {'alpha'},9:12; {'beta'},13:25};
+    else
+        FREQ_BANDS = {{'theta'},4:8; {'alpha'},9:12; {'beta'},13:25};
+    end
+
     
     % (5) which preprocessing steps to run?
     global DO_HPF; global FILTERS; global PLOT_CHANNEL_SPECTRA; 

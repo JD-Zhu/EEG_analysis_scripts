@@ -5,11 +5,11 @@
 % @save_location    where to save the figures (optional) 
 %                   if you don't want to save, just specify as ''
 % @x_limits         xlim for the power spectrum plot
-% @infraslow        whether to plot infraslow band (true or false)
+% @freq_bands       which freq bands to plot (e.g. theta, alpha, beta)
 %
 % Author: Judy Zhu (github.com/JD-Zhu)
 %
-function plot_TFR(freq, lay, save_location, x_limits, infraslow)
+function plot_TFR(freq, lay, save_location, x_limits, freq_bands)
 
     % unsquaring (i.e. back to uV unit)
     %bu = freq.powspctrm;
@@ -60,10 +60,9 @@ function plot_TFR(freq, lay, save_location, x_limits, infraslow)
     %}
 
     % topoplot for each freq band
-    if infraslow
-        plot_TFR_topo(freq, lay, 'infraslow', [0.03 0.06], save_location)
+    for band = 1:length(freq_bands)
+        freq_band = cell2mat(freq_bands{band, 1}); % first field is the freq band name
+        freq_range = freq_bands{band, 2}; % second field is the freq range in Hz
+        plot_TFR_topo(freq, lay, freq_band, [freq_range(1) freq_range(end)], save_location);
     end
-    plot_TFR_topo(freq, lay, 'theta', [4 8], save_location)
-    plot_TFR_topo(freq, lay, 'alpha', [9 12], save_location)
-    plot_TFR_topo(freq, lay, 'beta', [13 25], save_location)
 end

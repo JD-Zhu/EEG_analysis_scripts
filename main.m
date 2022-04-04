@@ -18,7 +18,7 @@ global DO_ICA; global FILTER_AGAIN_BEFORE_ICA; global FILTERS_for_ICA;
 global CHANNEL_REPAIR; global DOWNSAMPLE; %global DO_BEH_CHECK; global DO_PCA;
 global RUN_UP_TO_BEFORE_MANUAL_ARTEFACT; global RUN_UP_TO_AFTER_MANUAL_ARTEFACT; 
 global RUN_UP_TO_ICA; global RUN_UP_TO_ICA_REJECTION; global BROWSING_WITHOUT_SAVE;
-global ANALYSE_ISO; global EPISODIC_ONLY;
+global ANALYSE_ISO; global FREQ_BANDS; global EPISODIC_ONLY;
 % global colours;
 common();
 
