@@ -16,7 +16,7 @@
 
 global LAYOUT_FILE; global NEIGHBOURS_FILE; global PLOT_XLIM; global is_conn;
 global FREQ_BANDS;
-common();
+common_EM();
 
 load(LAYOUT_FILE);
 
@@ -33,7 +33,7 @@ varType = 'unequal'; %'equal';
 logged = true;
 
 % PLEASE SPECIFY the folder for this statistical analysis
-stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\17vs17_conn_afterSplineSL\';
+stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\17vs17_conn\';
 
 
 % where to read in the freq results for each group:
@@ -377,32 +377,36 @@ else
 
         for i = 1:N_chan % loop through each "from" channel
             for j = 1:N_chan % loop through each "to" channel
-                a = mig_indi.cohspctrm(:,i,j, freq_range); % extract coh values for all migraineurs
-                a = mean(a, 4); % avg over the selected freq range
-                b = ctrl_indi.cohspctrm(:,i,j, freq_range); % extract coh values for all controls
-                b = mean(b, 4); % avg over the selected freq range
+                if i > j % only test each channel pair once (i.e. triangular matrix, not square)
+                    a = mig_indi.cohspctrm(:,i,j, freq_range); % extract coh values for all migraineurs
+                    a = mean(a, 4); % avg over the selected freq range
+                    b = ctrl_indi.cohspctrm(:,i,j, freq_range); % extract coh values for all controls
+                    b = mean(b, 4); % avg over the selected freq range
 
-                % check if data are normally distributed (an assumption of the t-test)
-                if (i < j) % only check non-repeated channel pairs (i.e. 351 pairs)
+                    % check if data are normally distributed (an assumption of the t-test)
                     % use Anderson-Darling test for normality: 0 = normally distributed; 1 = not normally distributed
                     c = [c adtest([a; b])]; % opt 1: test normality on the data for each channel pair, and collect results into an array
                     %c = [c; a; b]; % opt 2: put all data together, you can then run adtest(c) afterwards
+                    
+                    [h,p,ci,stats] = ttest2(a, b, 'Vartype',varType);
+                    t_values(i,j) = stats.tstat; % store the t-value into the "chan x chan" matrix
+
+
+                    % if not normally distributed, try non-parametric alternatives of t-test:
+                    % https://www.statisticshowto.com/probability-and-statistics/non-normal-distributions/
+
+                    % (1) Wilcoxon rank sum test / Mann-Whitney U-test
+                    [p,h,stats] = ranksum(a, b, 'tail','right'); % right-tailed test: a > b
+                    % (2) Kruskal-Wallis test (replacement for one-way ANOVA)
+                    %grouping_var = [repmat({'pt'}, [length(a),1]); repmat({'ctrl'}, [length(b),1])];
+                    %[p,tbl,stats] = kruskalwallis([a; b], grouping_var, 'off');
+
+                    p_values(i,j) = p; % store the p-value into the "chan x chan" matrix
+                    
+                else % no test done in these cells, mark them as NaN (so they can be plotted as white colour below)
+                    t_values(i,j) = NaN;
+                    p_values(i,j) = NaN;
                 end
-
-                [h,p,ci,stats] = ttest2(a, b, 'Vartype',varType);
-                t_values(i,j) = stats.tstat; % store the t-value into the "chan x chan" matrix
-
-
-                % if not normally distributed, try non-parametric alternatives of t-test:
-                % https://www.statisticshowto.com/probability-and-statistics/non-normal-distributions/
-
-                % (1) Wilcoxon rank sum test / Mann-Whitney U-test
-                [p,h,stats] = ranksum(a, b, 'tail','left'); % right-tailed test: a > b
-                % (2) Kruskal-Wallis test (replacement for one-way ANOVA)
-                %grouping_var = [repmat({'pt'}, [length(a),1]); repmat({'ctrl'}, [length(b),1])];
-                %[p,tbl,stats] = kruskalwallis([a; b], grouping_var, 'off');
-
-                p_values(i,j) = p; % store the p-value into the "chan x chan" matrix
             end
         end
 
@@ -410,20 +414,22 @@ else
         %adtest(c)
 
         
+        %t_values(isnan(t_values)) = -1; % replace all NaNs first, so they don't show up as sig in the plot
         figure; title('t-values (migraineurs > controls)');
-        imagesc(t_values)
+        imagesc(t_values, 'AlphaData', ~isnan(t_values), [-3 3]); % any cells that were marked as NaN (i.e. no test done) will be plotted with a transparency alpha of 0 (i.e. completely transparent)
+                                                                  % set the clims manually so that all plots are of same scaling
         colorbar
         ylabel('EEG channel');
         xlabel('EEG channel');
         export_fig(gcf, [stats_folder 'tvalues_' freq_band '.png']);
 
-        p_values(isnan(p_values)) = 1; % replace all NaNs first, so they don't show up as sig p-values in the plot
+        %p_values(isnan(p_values)) = 1; % replace all NaNs first, so they don't show up as sig in the plot
         figure;
-        imagesc(p_values, [0 0.05]) % only plot p-values up to 0.05
+        imagesc(p_values, 'AlphaData', ~isnan(p_values), [0 0.05]) % only plot p-values up to 0.05
         colorbar
         ylabel('EEG channel');
         xlabel('EEG channel');
-        export_fig(gcf, [stats_folder 'pvalues_MannWhitneyUtest_ctrlGreater_' freq_band '.png']);
+        export_fig(gcf, [stats_folder 'pvalues_MannWhitneyUtest_migGreater_' freq_band '.png']);
         %export_fig(gcf, [stats_folder 'pvalues_kruskalwallis_' freq_band '.png']);
     end
 end
