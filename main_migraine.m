@@ -146,10 +146,12 @@ for i = 1:length(SubjectIDs)
         % For NeuroPrax EEG, remove the prefix "EEG " from channel labels
         % so that later on we can directly type in channel labels in the
         % ft_rejectvisual GUI (cannot enter directly if label contains space)
-        temp = alldata.label(1:27);
-        temp = cellfun(@(x) x(5:end), temp, 'un', 0); % remove first 4 chars in each cell
-        alldata.label(1:27) = temp;
-        alldata.hdr.label(1:27) = temp; % also update this (just in case)
+        if contains(alldata.label(1), 'EEG')
+            temp = alldata.label(1:27);
+            temp = cellfun(@(x) x(5:end), temp, 'un', 0); % remove first 4 chars in each cell
+            alldata.label(1:27) = temp;
+            alldata.hdr.label(1:27) = temp; % also update this (just in case)
+        end
         
         % Extract the EC / EO section of the recording:
         % (only do this for old data - Bec now records EC & EO into 2

@@ -117,6 +117,17 @@ for i = 1:length(SubjectIDs)
         end
         
         
+        % For NeuroPrax EEG, remove the prefix "EEG " from channel labels
+        % so that later on we can directly type in channel labels in the
+        % ft_rejectvisual GUI (cannot enter directly if label contains space)
+        if contains(alldata.label(1), 'EEG')
+            temp = alldata.label(1:27);
+            temp = cellfun(@(x) x(5:end), temp, 'un', 0); % remove first 4 chars in each cell
+            alldata.label(1:27) = temp;
+            alldata.hdr.label(1:27) = temp; % also update this (just in case)
+        end
+
+        
         % >>>
         % Step 3: manually mark artefact sections
         output_file = [output_path 'arft.mat'];

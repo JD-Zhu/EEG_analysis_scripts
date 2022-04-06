@@ -61,6 +61,15 @@ function [comp] = ICA_run(filter_first, varargin)
         data4ICA = ft_preprocessing(cfg, data4ICA);
         
 
+        % For NeuroPrax EEG, remove the prefix "EEG " from channel labels
+        % (to be consistent with alldata - we did this in main.m)
+        if contains(data4ICA.label(1), 'EEG')
+            temp = data4ICA.label(1:27);
+            temp = cellfun(@(x) x(5:end), temp, 'un', 0); % remove first 4 chars in each cell
+            data4ICA.label(1:27) = temp;
+            data4ICA.hdr.label(1:27) = temp; % also update this (just in case)
+        end
+
         % reject the artifacts and channels that were marked in Steps 3 & 4 
         arft.artfctdef.reject       = 'partial';
         data4ICA                    = ft_rejectartifact(arft, data4ICA);
