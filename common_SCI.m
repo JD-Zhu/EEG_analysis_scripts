@@ -16,7 +16,7 @@ function [] = common()
     ProjectFolder = 'Z:\Analysis\Preprocess\NeuRA_SCI_SCS_CIPN_BUMP\EEG\';
     
     global SUBJ_GROUP;
-    SUBJ_GROUP = 'controls'; % Options: 'patients', 'controls'    
+    SUBJ_GROUP = 'patients'; % Options: 'patients', 'controls'    
     
     global DataFolder;   
     DataFolder = [ProjectFolder 'data\' SUBJ_GROUP '\']; % this directory should contain all the SubjectFolders
@@ -37,7 +37,7 @@ function [] = common()
     SubjectIDs = {SubjectIDs.name}; % extract the names into a cell array
 
     % Option 2: manually specify the subject codes
-    SubjectIDs = {'9003_S1', '9005_S1'};%, '9011_S1'};
+    SubjectIDs = {'9031_S1'}; % {'9003_S1', '9005_S1'};
     
     
     % 3. Which EEG system did you use to collect the data?

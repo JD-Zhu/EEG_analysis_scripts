@@ -79,7 +79,10 @@ for i = 1:length(SubjectIDs)
         cfg                      = [];
         cfg.trialfun             = 'ft_trialfun_general';
         cfg.datafile             = rawfile;
-        cfg.headerfile           = [rawfile(1:end-3) 'vhdr'];
+        headerfile               = [rawfile(1:end-3) 'vhdr'];
+        if (exist(headerfile, 'file') == 2) % only read the vhdr file if it exists (e.g. for NeuroPrax it's just one EDF file and nothing else)
+            cfg.headerfile       = headerfile;
+        end
         cfg.trialdef.triallength = Inf;
         cfg.trialdef.ntrials     = 1; % read in all data as a single segment, coz filtering should be done on continuous data
         cfg = ft_definetrial(cfg);
