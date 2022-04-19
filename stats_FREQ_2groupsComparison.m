@@ -33,7 +33,7 @@ varType = 'unequal'; %'equal';
 logged = true;
 
 % PLEASE SPECIFY the folder for this statistical analysis
-stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\17vs17_conn\';
+stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\17vs17\';
 
 
 % where to read in the freq results for each group:
@@ -76,8 +76,8 @@ if ~is_conn
 
 
     %% plot overall power (mig vs ctrl)
-    PLOT_XLIM = [2 30];
-
+    
+    % absolute power
     figure; hold on;
     plot(mig_avg.freq, mean(mig_avg.powspctrm));
     plot(ctrl_avg.freq, mean(ctrl_avg.powspctrm));
@@ -90,7 +90,7 @@ if ~is_conn
 
     export_fig(gcf, [stats_folder 'overall_power_mig-vs-ctrl.png']);
 
-    % plot log-transformed version
+    % log-transformed power
     figure; hold on;
     plot(mig_avg.freq, mean(log(mig_avg.powspctrm)));
     plot(ctrl_avg.freq, mean(log(ctrl_avg.powspctrm)));
@@ -101,24 +101,42 @@ if ~is_conn
     legend({'Migraineurs', 'Controls'});
     hold off;
 
+    % add shaded region for alpha band
+    %{
+    ylimits = ylim; ylow = ylimits(1); yhigh = ylimits(2);
+    x = [9 12 12 9]; % specify x,y coordinates of the 4 corners
+    y = [ylow ylow yhigh yhigh]; 
+    alpha = 0.3; % use alpha to set transparency
+    patch(x,y,'black', 'FaceAlpha',alpha, 'EdgeColor','none', ...
+        'HandleVisibility','off') % turn off HandleVisibility so it won't show up in the legends
+    ylim(ylimits); % ensure ylim doesn't get expanded
+    %}
+    
     export_fig(gcf, [stats_folder 'overall_power_logged_mig-vs-ctrl.png']);
 
 
     %% Analysis of overall power
-    % run t-test (mig vs ctrl) on a particular freq range
-    freq_range = 9:12;
+    % run t-test (mig vs ctrl) for each freq band
+    
+    % loop thru each freq band
+    for band = 1:length(FREQ_BANDS)
+        freq_band = cell2mat(FREQ_BANDS{band, 1}); % first field is the freq band name
+        freq_range = FREQ_BANDS{band, 2}; % second field is the freq range in Hz
+    
+        mig_overall = squeeze(mean(mig_indi.powspctrm, 2)); % avg over all channels
+        ctrl_overall = squeeze(mean(ctrl_indi.powspctrm, 2)); % avg over all channels
 
-    mig_overall = squeeze(mean(mig_indi.powspctrm, 2)); % avg over all channels
-    ctrl_overall = squeeze(mean(ctrl_indi.powspctrm, 2)); % avg over all channels
+        a = mean(mig_overall(:,freq_range), 2); % avg over the selected freq range
+        b = mean(ctrl_overall(:,freq_range), 2); % avg over the selected freq range
 
-    a = mean(mig_overall(:,freq_range), 2); % avg over the selected freq range
-    b = mean(ctrl_overall(:,freq_range), 2); % avg over the selected freq range
-
-    % this function conducts a two-sample t-test
-    [h,p,ci,stats] = ttest2(a, b, 'Vartype',varType); % or should it be equal variance? (p-values were similar)
-    stats.tstat  % t-value
-    p            % p-value
-
+        % this function conducts a two-sample t-test
+        [h,p,ci,stats] = ttest2(a, b, 'Vartype',varType); % or should it be equal variance? (p-values were similar)
+        
+        % print results to console output
+        disp([freq_band ' band:']);
+        stats.tstat  % t-value
+        p            % p-value
+    end
 
 
     %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
