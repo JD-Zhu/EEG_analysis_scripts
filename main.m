@@ -450,7 +450,7 @@ for i = 1:length(SubjectIDs)
         
         % this fn takes care of all the plotting 
         % (power spectrum & topo for each freq band)
-        plot_TFR(freq, lay, save_location, [1 30], true);
+        plot_TFR(freq, lay, save_location, [1 30], FREQ_BANDS);
         
         
         % SAVE all relevant variables from the workspace
