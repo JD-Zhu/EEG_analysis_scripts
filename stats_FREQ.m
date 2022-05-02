@@ -12,7 +12,8 @@
 
 global SubjectIDs_GA; global LAYOUT_FILE; global is_conn;
 global ResultsFolder_thisrun; global ResultsFolder_conn_thisrun;
-global ANALYSE_ISO; global PLOT_XLIM; global FREQ_FIELD; global FREQS_TO_EXPORT; 
+global ANALYSE_ISO; global FREQ_BANDS; global PLOT_XLIM; 
+global FREQ_FIELD; global FREQS_TO_EXPORT; 
 common();
 
 % change to the correct ResultsFolder
@@ -178,7 +179,7 @@ if is_conn % for connectivity analysis
 else % for standard freq analysis (GA power spectrum & topo for each freq band)
     
     load(LAYOUT_FILE);
-    plot_TFR(GA_freq, lay, save_location, PLOT_XLIM, ANALYSE_ISO); % include topoplot for infra-slow?
+    plot_TFR(GA_freq, lay, save_location, PLOT_XLIM, FREQ_BANDS); % include topoplot for infra-slow?
     
     % For sanity check: detailed topoplots (at regular freq interval)
     %{
