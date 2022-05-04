@@ -16,7 +16,7 @@
 
 global LAYOUT_FILE; global NEIGHBOURS_FILE; global PLOT_XLIM; global is_conn;
 global FREQ_BANDS;
-common_EM();
+common_CM();
 
 load(LAYOUT_FILE);
 
@@ -33,12 +33,12 @@ varType = 'unequal'; %'equal';
 logged = true;
 
 % PLEASE SPECIFY the folder for this statistical analysis
-stats_folder = 'Z:\Analysis\Judy\EpisodicMigraine\stats\17vs17\';
+stats_folder = 'Z:\Analysis\Macefield Lab\Bec\stats\4vs4\';
 
 
 % where to read in the freq results for each group:
-migraineurs_folder = [stats_folder 'GA_migraineurs\'];
-controls_folder = [stats_folder 'GA_controls\'];
+migraineurs_folder = [stats_folder '\GA_migraineurs\'];
+controls_folder = [stats_folder '\GA_controls\'];
 
 % load data
 load([migraineurs_folder 'GA_avg.mat']);
@@ -69,9 +69,9 @@ if ~is_conn
 
 
     % locations to save results
-    stats_folder_indi_chan = [stats_folder 'indi-chan-analysis\'];
+    stats_folder_indi_chan = [stats_folder '\indi-chan-analysis\'];
     mkdir(stats_folder_indi_chan);
-    stats_folder_cluster = [stats_folder_indi_chan 'cluster_stat' logged_suffix '\'];
+    stats_folder_cluster = [stats_folder_indi_chan '\cluster_stat' logged_suffix '\'];
     mkdir(stats_folder_cluster);
 
 
@@ -123,12 +123,20 @@ if ~is_conn
         freq_band = cell2mat(FREQ_BANDS{band, 1}); % first field is the freq band name
         freq_range = FREQ_BANDS{band, 2}; % second field is the freq range in Hz
     
-        mig_overall = squeeze(mean(mig_indi.powspctrm, 2)); % avg over all channels
-        ctrl_overall = squeeze(mean(ctrl_indi.powspctrm, 2)); % avg over all channels
+        % find the start index & end index for the selected freq range
+        freq_min_idx = find(ctrl_indi.freq == freq_range(1));
+        freq_max_idx = find(ctrl_indi.freq == freq_range(end));
+        
+        
+        % avg over all channels
+        mig_overall = squeeze(mean(mig_indi.powspctrm, 2)); 
+        ctrl_overall = squeeze(mean(ctrl_indi.powspctrm, 2));
+        
+        % avg over the selected freq range
+        a = mean(mig_overall(:,freq_min_idx:freq_max_idx), 2); 
+        b = mean(ctrl_overall(:,freq_min_idx:freq_max_idx), 2);
 
-        a = mean(mig_overall(:,freq_range), 2); % avg over the selected freq range
-        b = mean(ctrl_overall(:,freq_range), 2); % avg over the selected freq range
-
+        
         % this function conducts a two-sample t-test
         [h,p,ci,stats] = ttest2(a, b, 'Vartype',varType); % or should it be equal variance? (p-values were similar)
         
@@ -179,6 +187,11 @@ if ~is_conn
     for band = 1:length(FREQ_BANDS)
         freq_band = cell2mat(FREQ_BANDS{band, 1}); % first field is the freq band name
         freq_range = FREQ_BANDS{band, 2}; % second field is the freq range in Hz
+
+        % find the start index & end index for the selected freq range
+        freq_min_idx = find(ctrl_indi.freq == freq_range(1));
+        freq_max_idx = find(ctrl_indi.freq == freq_range(end));
+        
     
         N_chan = size(mig_indi.powspctrm, 2); % get the number of channels
 
@@ -187,9 +200,9 @@ if ~is_conn
         p_values = zeros(N_chan, 1);
 
         for i = 1:N_chan % loop through each channel
-            a = mig_indi.powspctrm(:,i,freq_range); % extract power for all migraineurs (only for the selected freq range)
+            a = mig_indi.powspctrm(:,i,freq_min_idx:freq_max_idx); % extract power for all migraineurs (only for the selected freq range)
             a = mean(a,3); % take the avg over that freq range
-            b = ctrl_indi.powspctrm(:,i,freq_range); % do the same for controls
+            b = ctrl_indi.powspctrm(:,i,freq_min_idx:freq_max_idx); % do the same for controls
             b = mean(b,3); 
 
             [h,p,ci,stats] = ttest2(a, b, 'Vartype',varType); % or should it be equal variance?
@@ -224,7 +237,7 @@ if ~is_conn
         freq_range = FREQ_BANDS{band, 2}; % second field is the freq range in Hz
         plot_TFR_topo(diff_GA, lay, freq_band, [freq_range(1) freq_range(end)], [stats_folder 'topo_mig-minus-ctrl_'])
     end
-
+    
 
     %% Cluster-based statistical analysis
     % https://www.fieldtriptoolbox.org/tutorial/cluster_permutation_freq/
@@ -318,7 +331,7 @@ if ~is_conn
     [stat] = ft_freqstatistics(cfg, mig{:}, ctrl{:});
     length(find(stat.mask)) % display how many chans were significant/marginal
 
-    %save([stats_folder_cluster 'minnbchan' mat2str(cfg.minnbchan) '_' freq_band '.mat'], 'stat');
+    save([stats_folder_cluster 'minnbchan' mat2str(cfg.minnbchan) '_' freq_band '.mat'], 'stat');
 
 
     %% ft_clusterplot (plots t-values by default)
@@ -384,6 +397,10 @@ else
         freq_band = cell2mat(FREQ_BANDS{band, 1}); % first field is the freq band name
         freq_range = FREQ_BANDS{band, 2}; % second field is the freq range in Hz
 
+        % find the start index & end index for the selected freq range
+        freq_min_idx = find(ctrl_indi.freq == freq_range(1));
+        freq_max_idx = find(ctrl_indi.freq == freq_range(end));
+
     
         N_chan = size(mig_indi.cohspctrm, 2); % number of channels
 
@@ -396,9 +413,9 @@ else
         for i = 1:N_chan % loop through each "from" channel
             for j = 1:N_chan % loop through each "to" channel
                 if i > j % only test each channel pair once (i.e. triangular matrix, not square)
-                    a = mig_indi.cohspctrm(:,i,j, freq_range); % extract coh values for all migraineurs
+                    a = mig_indi.cohspctrm(:,i,j, freq_min_idx:freq_max_idx); % extract coh values for all migraineurs
                     a = mean(a, 4); % avg over the selected freq range
-                    b = ctrl_indi.cohspctrm(:,i,j, freq_range); % extract coh values for all controls
+                    b = ctrl_indi.cohspctrm(:,i,j, freq_min_idx:freq_max_idx); % extract coh values for all controls
                     b = mean(b, 4); % avg over the selected freq range
 
                     % check if data are normally distributed (an assumption of the t-test)
