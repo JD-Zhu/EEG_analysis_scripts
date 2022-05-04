@@ -16,7 +16,7 @@
 
 global LAYOUT_FILE; global NEIGHBOURS_FILE; global PLOT_XLIM; global is_conn;
 global FREQ_BANDS;
-common_CM();
+common();
 
 load(LAYOUT_FILE);
 
