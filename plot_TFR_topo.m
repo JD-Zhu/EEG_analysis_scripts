@@ -21,8 +21,8 @@ function plot_TFR_topo(freq, lay, freq_band, freq_range, save_location, varargin
     cfg.marker       = 'on';
     cfg.style        = 'straight'; % 'both';
     cfg.colorbar     = 'yes';
-    %cfg.comment      = 'xlim'; % display date & freq range
     cfg.comment      = 'no';
+    %cfg.comment      = 'xlim'; % display date & freq range
     cfg.layout       = lay;
     cfg.dataname     = freq_band; % display this in the figure window title bar
     ft_topoplotTFR(cfg, freq); 
