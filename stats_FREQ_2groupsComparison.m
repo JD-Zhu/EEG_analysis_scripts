@@ -16,7 +16,7 @@
 
 global LAYOUT_FILE; global NEIGHBOURS_FILE; global PLOT_XLIM; global is_conn;
 global FREQ_BANDS;
-common();
+common_EM();
 
 load(LAYOUT_FILE);
 
@@ -33,7 +33,7 @@ varType = 'unequal'; %'equal';
 logged = true;
 
 % PLEASE SPECIFY the folder for this statistical analysis
-stats_folder = 'Z:\Analysis\Macefield Lab\Bec\stats\4vs4\';
+stats_folder = 'C:\Users\mq43606024\Desktop\migraine_EEG_conn\stats\17vs17_conn_afterSplineSL\';
 
 
 % where to read in the freq results for each group:
@@ -398,8 +398,21 @@ else
         freq_range = FREQ_BANDS{band, 2}; % second field is the freq range in Hz
 
         % find the start index & end index for the selected freq range
-        freq_min_idx = find(ctrl_indi.freq == freq_range(1));
-        freq_max_idx = find(ctrl_indi.freq == freq_range(end));
+        freq_min_idx = find(mig_indi.freq == freq_range(1));
+        freq_max_idx = find(mig_indi.freq == freq_range(end));
+
+        
+        % Create the conn matrix for this freq band (for use with NBS toolbox)
+        
+        % avg the coh values across this freq band
+        conn_matrix_mig = mean(mig_indi.cohspctrm(:,:,:, freq_min_idx:freq_max_idx), 4);
+        conn_matrix_ctrl = mean(ctrl_indi.cohspctrm(:,:,:, freq_min_idx:freq_max_idx), 4);
+        % concat the two matrices (Note: the order matters! In NBS we test the hypo: group 2 > group1)
+        conn_matrix = [conn_matrix_ctrl; conn_matrix_mig];
+        % reorder the dimensions: subj_chan_chan -> chan_chan_subj
+        conn_matrix = permute(conn_matrix, [2 3 1]);
+        % save the conn matrix
+        save([stats_folder '\conn_matrix_' freq_band '.mat'], 'conn_matrix');
 
     
         N_chan = size(mig_indi.cohspctrm, 2); % number of channels

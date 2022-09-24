@@ -602,7 +602,8 @@ for i = 1:length(SubjectIDs)
         cfg.output    = 'fourier';
         cfg.tapsmofrq = 2; % frequency smoothing of 2Hz
         cfg.foi       = 1:1:30; 
-        %cfg.pad       = 'nextpow2'; % for more efficient FFT computation (but sometimes worse)
+        cfg.pad       = 'nextpow2'; % for more efficient FFT computation (but sometimes worse)
+                                    % this can fix the non-whole numbers in the "freq" field? if so, also use this method above
         freq          = ft_freqanalysis(cfg, all_blocks);
         
         cfg           = [];
