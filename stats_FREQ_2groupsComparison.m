@@ -112,7 +112,7 @@ if ~is_conn
     ylim(ylimits); % ensure ylim doesn't get expanded
     %}
     
-    export_fig(gcf, [stats_folder 'overall_power_logged_mig-vs-ctrl.png']);
+    export_fig(gcf, [stats_folder 'overall_power_(logged)_mig-vs-ctrl.png']);
 
 
     %% Analysis of overall power
@@ -139,11 +139,12 @@ if ~is_conn
         
         % this function conducts a two-sample t-test
         [h,p,ci,stats] = ttest2(a, b, 'Vartype',varType); % or should it be equal variance? (p-values were similar)
+        t = stats.tstat;
         
         % print results to console output
         disp([freq_band ' band:']);
-        stats.tstat  % t-value
-        p            % p-value
+        disp(['t = ', num2str(t)]) % print the t-value
+        disp(['p = ', num2str(p)]) % print the p-value
     end
 
 
@@ -192,10 +193,9 @@ if ~is_conn
         freq_min_idx = find(ctrl_indi.freq == freq_range(1));
         freq_max_idx = find(ctrl_indi.freq == freq_range(end));
         
-    
-        N_chan = size(mig_indi.powspctrm, 2); % get the number of channels
-
+            
         % initialise an array to store the t-value for each channel
+        N_chan = size(mig_indi.powspctrm, 2); % get the number of channels
         t_values = zeros(N_chan, 1);
         p_values = zeros(N_chan, 1);
 
@@ -227,6 +227,7 @@ if ~is_conn
     % NOTE: this plot is based on absolute power diff in the GA, 
     % whereas Flavia plotted the t-values (see above - "Figure 2b")
 
+    %{
     % calculate the difference GA
     diff_GA = mig_avg;
     diff_GA.powspctrm = mig_avg.powspctrm - ctrl_avg.powspctrm;
@@ -237,6 +238,7 @@ if ~is_conn
         freq_range = FREQ_BANDS{band, 2}; % second field is the freq range in Hz
         plot_TFR_topo(diff_GA, lay, freq_band, [freq_range(1) freq_range(end)], [stats_folder 'topo_mig-minus-ctrl_'])
     end
+    %}
     
 
     %% Cluster-based statistical analysis
