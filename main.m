@@ -18,7 +18,7 @@ global DO_ICA; global FILTER_AGAIN_BEFORE_ICA; global FILTERS_for_ICA;
 global CHANNEL_REPAIR; global DOWNSAMPLE; %global DO_BEH_CHECK; global DO_PCA;
 global RUN_UP_TO_BEFORE_MANUAL_ARTEFACT; global RUN_UP_TO_AFTER_MANUAL_ARTEFACT; 
 global RUN_UP_TO_ICA; global RUN_UP_TO_ICA_REJECTION; global BROWSING_WITHOUT_SAVE;
-global ANALYSE_ISO; global FREQ_BANDS; global EPISODIC_ONLY;
+global ANALYSE_ISO; global FREQ_BANDS; global FREQ_FIELD; global EPISODIC_ONLY;
 % global colours;
 common();
 
@@ -437,7 +437,7 @@ for i = 1:length(SubjectIDs)
         cfg.channel = 'all';
         cfg.method  = 'mtmfft';
         cfg.taper   = 'boxcar';
-        cfg.foi     = 0:0.01:30; % 1 / cfg1.length = 0.25 (the longer the segments, the more reso we can have here)
+        cfg.foi     = FREQ_FIELD; % 1 / cfg1.length = 0.25 (the longer the segments, the more reso we can have here)
                                   % so for a reso of 0.01Hz, we need at least 1 segment with a length of 1 / 0.01 = 100 seconds
         freq         = ft_freqanalysis(cfg, all_blocks);
 
